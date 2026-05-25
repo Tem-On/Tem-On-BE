@@ -1,7 +1,6 @@
 package com.example.tem_on.auth.jwt;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,24 +30,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtProvider.validateToken(token)) {
             Long userId = jwtProvider.getUserId(token);
+            String role = jwtProvider.getRole(token);
+
+            CustomUserDetails userDetails =
+                    new CustomUserDetails(userId, role);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
-                            String.valueOf(userId),
+                            userDetails,
                             null,
-                            Collections.emptyList()
+                            userDetails.getAuthorities()
                     );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {
+
         String bearerToken = request.getHeader("Authorization");
 
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+        if (bearerToken != null &&
+                bearerToken.startsWith("Bearer ")) {
+
             return bearerToken.substring(7);
         }
 
