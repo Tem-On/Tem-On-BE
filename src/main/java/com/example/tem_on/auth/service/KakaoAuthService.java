@@ -57,15 +57,21 @@ public class KakaoAuthService {
 
         JsonNode kakaoAccount = response.get("kakao_account");
 
-        String email = kakaoAccount.has("email")
-                ? kakaoAccount.get("email").asText()
-                : null;
+        String email = null;
+        String nickname = "카카오사용자";
 
-        JsonNode profile = kakaoAccount.get("profile");
+        if (kakaoAccount != null) {
 
-        String nickname = profile.has("nickname")
-                ? profile.get("nickname").asText()
-                : "카카오사용자";
+            if (kakaoAccount.has("email")) {
+                email = kakaoAccount.get("email").asText();
+            }
+
+            JsonNode profile = kakaoAccount.get("profile");
+
+            if (profile != null && profile.has("nickname")) {
+                nickname = profile.get("nickname").asText();
+            }
+        }
 
         return KakaoUserInfo.builder()
                 .kakaoId(kakaoId)

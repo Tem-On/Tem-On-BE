@@ -1,14 +1,16 @@
 package com.example.tem_on.auth.ctrl;
 
-import com.example.tem_on.auth.domain.dto.KakaoLoginRequest;
 import com.example.tem_on.auth.domain.dto.TokenResponse;
+import com.example.tem_on.auth.jwt.CustomUserDetails;
 import com.example.tem_on.auth.service.AuthService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,19 +21,20 @@ public class AuthCtrl {
 
     private final AuthService authService;
 
-    @PostMapping("/kakao")
+    @GetMapping("/oauth/kakao")
     @Operation(
-            summary = "카카오 로그인",
-            description = "카카오 인가 코드를 통해 로그인 후 JWT를 발급합니다."
+            summary = "카카오 로그인 리다이렉트 ",
+            description = "브라우저에서 카카오 로그인 후 JSON 토큰 결과를 바로 확인합니다."
     )
-    public ResponseEntity<TokenResponse> kakaoLogin(
-            @RequestBody KakaoLoginRequest request
+    public ResponseEntity<TokenResponse> kakaoLoginRedirect(
+            @RequestParam("code") String code
     ) {
         TokenResponse tokenResponse =
-                authService.kakaoLogin(request.getCode());
+                authService.kakaoLogin(code);
 
         return ResponseEntity.ok(tokenResponse);
     }
+
 
     @PostMapping("/logout")
     @Operation(
@@ -39,15 +42,15 @@ public class AuthCtrl {
             description = "현재 사용자의 Refresh Token을 삭제합니다."
     )
     public ResponseEntity<String> logout(
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         if (userDetails == null) {
             return ResponseEntity.status(401)
                     .body("인증 정보가 없습니다.");
         }
-        Long userId =
-                Long.parseLong(userDetails.getUsername());
-        authService.logout(userId);
+
+        authService.logout(userDetails.getUserId());
+
         return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 }
