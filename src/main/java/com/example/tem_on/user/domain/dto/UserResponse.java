@@ -5,6 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class UserResponse {
+
     private final Long id;
     private final String email;
     private final String nickname;
@@ -15,7 +16,7 @@ public class UserResponse {
         this.id = user.getId();
         this.email = user.getEmail();
         this.nickname = user.getNickname();
-        this.role = user.getRole();
-        this.status = user.getStatus();
+        this.role = user.getRole().name();
+        this.status = user.getStatus().name();
     }
 }
