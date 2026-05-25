@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -16,19 +18,30 @@ public class KakaoAuthService {
     @Value("${kakao.client-id}")
     private String clientId;
 
+    @Value("${kakao.client-secret}")
+    private String clientSecret;
+
     @Value("${kakao.redirect-uri}")
     private String redirectUri;
 
     private final RestClient restClient = RestClient.create();
 
     public String getKakaoAccessToken(String code) {
+
+        System.out.println("clientId = " + clientId);
+        System.out.println("redirectUri = " + redirectUri);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", clientId);
+        params.add("client_secret", clientSecret);
+        params.add("redirect_uri", redirectUri);
+        params.add("code", code);
+
         JsonNode response = restClient.post()
                 .uri("https://kauth.kakao.com/oauth/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body("grant_type=authorization_code"
-                        + "&client_id=" + clientId
-                        + "&redirect_uri=" + redirectUri
-                        + "&code=" + code)
+                .body(params)
                 .retrieve()
                 .body(JsonNode.class);
 
@@ -36,6 +49,7 @@ public class KakaoAuthService {
     }
 
     public KakaoUserInfo getKakaoUserInfo(String kakaoAccessToken) {
+
         JsonNode response = restClient.get()
                 .uri("https://kapi.kakao.com/v2/user/me")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + kakaoAccessToken)
