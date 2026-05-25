@@ -28,9 +28,6 @@ public class KakaoAuthService {
 
     public String getKakaoAccessToken(String code) {
 
-        System.out.println("clientId = " + clientId);
-        System.out.println("redirectUri = " + redirectUri);
-
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", clientId);
