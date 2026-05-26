@@ -38,8 +38,9 @@ public class Product {
     private String category;
 
     // 상품 상태
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private ProductStatus status;
 
     // 상품 등록일
     @Column(nullable = false)
