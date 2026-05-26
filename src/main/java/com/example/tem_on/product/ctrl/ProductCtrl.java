@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Product", description = "상품 API")
@@ -23,12 +24,14 @@ public class ProductCtrl {
             description = "상품 목록을 조회합니다. 카테고리, 검색어, 페이지네이션, 정렬을 사용할 수 있습니다."
     )
     @GetMapping
-    public Page<ProductResponse> getProducts(
+    public ResponseEntity<Page<ProductResponse>> getProducts(
             @RequestParam(required = false) ProductCategory category,
             @RequestParam(required = false) String keyword,
             Pageable pageable
     ) {
-        return productService.findProducts(category, keyword, pageable);
+        return ResponseEntity.ok(
+                productService.findProducts(category, keyword, pageable)
+        );
     }
 
     @Operation(
@@ -36,7 +39,11 @@ public class ProductCtrl {
             description = "상품 ID를 통해 상품 상세 정보를 조회합니다."
     )
     @GetMapping("/{productId}")
-    public ProductResponse getProduct(@PathVariable Long productId) {
-        return productService.findProduct(productId);
+    public ResponseEntity<ProductResponse> getProduct(
+            @PathVariable Long productId
+    ) {
+        return ResponseEntity.ok(
+                productService.findProduct(productId)
+        );
     }
 }
