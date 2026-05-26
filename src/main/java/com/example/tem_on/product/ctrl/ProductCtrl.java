@@ -5,9 +5,9 @@ import com.example.tem_on.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Product", description = "상품 API")
 @RestController
@@ -19,11 +19,15 @@ public class ProductCtrl {
 
     @Operation(
             summary = "상품 목록 조회",
-            description = "기본 상품 목록을 조회합니다."
+            description = "상품 목록을 조회합니다. 카테고리, 검색어, 페이지네이션을 함께 사용할 수 있습니다."
     )
     @GetMapping
-    public List<ProductResponse> getProducts() {
-        return productService.findAllProducts();
+    public Page<ProductResponse> getProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String keyword,
+            Pageable pageable
+    ) {
+        return productService.findProducts(category, keyword, pageable);
     }
 
     @Operation(
