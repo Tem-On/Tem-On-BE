@@ -1,6 +1,5 @@
 package com.example.tem_on.user.service;
 
-import com.example.tem_on.user.domain.dto.UserRequest;
 import com.example.tem_on.user.domain.dto.UserResponse;
 import com.example.tem_on.user.domain.entity.UserEntity;
 import com.example.tem_on.user.repository.UserRepository;
@@ -23,12 +22,11 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateUserProfile(Long userId, UserRequest request) {
+    public UserResponse updateUserProfile(Long userId, String nickname) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다. id=" + userId));
-        
-        user.updateProfile(request.getPassword(), request.getNickname());
-        
+
+        user.updateProfile(nickname);
         return new UserResponse(user);
     }
 

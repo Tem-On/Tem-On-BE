@@ -50,12 +50,7 @@ public class UserEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public void updateProfile(String password, String nickname) {
-
-        if (password != null && !password.isBlank()) {
-            this.password = password;
-        }
-
+    public void updateProfile(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
             this.nickname = nickname;
         }
