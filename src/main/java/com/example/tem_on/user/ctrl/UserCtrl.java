@@ -1,6 +1,5 @@
 package com.example.tem_on.user.ctrl;
 
-import com.example.tem_on.user.domain.dto.UserRequest;
 import com.example.tem_on.user.domain.dto.UserResponse;
 import com.example.tem_on.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,15 +30,17 @@ public class UserCtrl {
     }
 
     @PatchMapping("/me")
-    @Operation(summary = "내 프로필 수정", description = "비밀번호, 닉네임 등의 내 정보를 수정합니다.")
+    @Operation(summary = "내 닉네임 수정", description = "쿼리 파라미터로 전달받은 새로운 닉네임으로 변경합니다.")
     public ResponseEntity<UserResponse> updateMyProfile(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UserRequest request) {
+            @RequestParam String nickname) {
+
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
         Long userId = Long.parseLong(userDetails.getUsername());
-        UserResponse updatedProfile = userService.updateUserProfile(userId, request);
+
+        UserResponse updatedProfile = userService.updateUserProfile(userId, nickname);
         return ResponseEntity.ok(updatedProfile);
     }
 
