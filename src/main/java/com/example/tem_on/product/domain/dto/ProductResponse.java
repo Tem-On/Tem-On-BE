@@ -2,6 +2,7 @@ package com.example.tem_on.product.domain.dto;
 
 import com.example.tem_on.product.domain.entity.Product;
 import com.example.tem_on.product.domain.entity.ProductStatus;
+import com.example.tem_on.product.domain.entity.ProductCategory;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,7 +17,7 @@ public class ProductResponse {
     private String description;
     private int price;
     private String imageUrl;
-    private String category;
+    private ProductCategory category;
     private ProductStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

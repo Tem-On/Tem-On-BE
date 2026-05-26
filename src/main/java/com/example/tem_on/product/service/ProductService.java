@@ -2,6 +2,7 @@ package com.example.tem_on.product.service;
 
 import com.example.tem_on.product.domain.dto.ProductResponse;
 import com.example.tem_on.product.domain.entity.Product;
+import com.example.tem_on.product.domain.entity.ProductCategory;
 import com.example.tem_on.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,31 +16,21 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     public Page<ProductResponse> findProducts(
-            String category,
+            ProductCategory category,
             String keyword,
             Pageable pageable
     ) {
         Page<Product> products;
 
-        boolean hasCategory = category != null && !category.isBlank();
+        boolean hasCategory = category != null;
         boolean hasKeyword = keyword != null && !keyword.isBlank();
 
         if (hasCategory && hasKeyword) {
-            products = productRepository.findByCategoryAndNameContaining(
-                    category,
-                    keyword,
-                    pageable
-            );
+            products = productRepository.findByCategoryAndNameContaining(category, keyword, pageable);
         } else if (hasCategory) {
-            products = productRepository.findByCategory(
-                    category,
-                    pageable
-            );
+            products = productRepository.findByCategory(category, pageable);
         } else if (hasKeyword) {
-            products = productRepository.findByNameContaining(
-                    keyword,
-                    pageable
-            );
+            products = productRepository.findByNameContaining(keyword, pageable);
         } else {
             products = productRepository.findAll(pageable);
         }

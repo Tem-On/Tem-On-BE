@@ -34,8 +34,9 @@ public class Product {
     private String imageUrl;
 
     // 상품 카테고리
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String category;
+    private ProductCategory category;
 
     // 상품 상태
     @Enumerated(EnumType.STRING)

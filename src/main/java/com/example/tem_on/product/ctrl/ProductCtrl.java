@@ -1,6 +1,7 @@
 package com.example.tem_on.product.ctrl;
 
 import com.example.tem_on.product.domain.dto.ProductResponse;
+import com.example.tem_on.product.domain.entity.ProductCategory;
 import com.example.tem_on.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,11 +20,11 @@ public class ProductCtrl {
 
     @Operation(
             summary = "상품 목록 조회",
-            description = "상품 목록을 조회합니다. 카테고리, 검색어, 페이지네이션을 함께 사용할 수 있습니다."
+            description = "상품 목록을 조회합니다. 카테고리, 검색어, 페이지네이션, 정렬을 사용할 수 있습니다."
     )
     @GetMapping
     public Page<ProductResponse> getProducts(
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) ProductCategory category,
             @RequestParam(required = false) String keyword,
             Pageable pageable
     ) {
