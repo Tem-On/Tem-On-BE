@@ -7,6 +7,7 @@ import com.example.tem_on.queue.domain.dto.QueueEnterResponse;
 import com.example.tem_on.queue.domain.dto.QueueEstimatedTimeResponse;
 import com.example.tem_on.queue.domain.dto.QueueRankResponse;
 import com.example.tem_on.queue.domain.dto.QueueStatusResponse;
+import com.example.tem_on.queue.domain.dto.QueueTestEnterRequest;
 import com.example.tem_on.queue.service.QueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +98,23 @@ public class QueueCtrl {
     ) {
         queueService.expire(eventProductId);
         return ResponseEntity.ok().build();
+    }
+
+    // 대기열 테스트용 API
+    @Operation(
+            summary = "테스트용 대기열 진입",
+            description = "부하 테스트용 API입니다."
+    )
+    @PostMapping("/test-enter")
+    public ResponseEntity<QueueEnterResponse> testEnter(
+            @RequestBody QueueTestEnterRequest request
+    ) {
+
+        return ResponseEntity.ok(
+                queueService.enter(
+                        request.getEventProductId(),
+                        request.getUserId()
+                )
+        );
     }
 }
