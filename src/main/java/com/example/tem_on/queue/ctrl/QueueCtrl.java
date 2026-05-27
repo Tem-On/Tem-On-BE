@@ -1,5 +1,6 @@
 package com.example.tem_on.queue.ctrl;
 
+import com.example.tem_on.global.util.SecurityUtil;
 import com.example.tem_on.queue.domain.dto.QueueAvailableResponse;
 import com.example.tem_on.queue.domain.dto.QueueCurrentUsersResponse;
 import com.example.tem_on.queue.domain.dto.QueueEnterResponse;
@@ -19,56 +20,61 @@ public class QueueCtrl {
 
     private final QueueService queueService;
 
-    @Operation(summary = "대기열 진입", description = "이벤트 상품 대기열에 사용자를 진입시킵니다.")
+    @Operation(summary = "대기열 진입", description = "현재 로그인한 사용자를 이벤트 상품 대기열에 진입시킵니다.")
     @PostMapping("/enter")
     public ResponseEntity<QueueEnterResponse> enter(
-            @RequestParam Long eventProductId,
-            @RequestParam Long userId
+            @RequestParam Long eventProductId
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         return ResponseEntity.ok(
                 queueService.enter(eventProductId, userId)
         );
     }
 
-    @Operation(summary = "현재 대기 순번 조회", description = "사용자의 현재 대기 순번을 조회합니다.")
+    @Operation(summary = "현재 대기 순번 조회", description = "현재 로그인한 사용자의 대기 순번을 조회합니다.")
     @GetMapping("/rank")
     public ResponseEntity<QueueRankResponse> getRank(
-            @RequestParam Long eventProductId,
-            @RequestParam Long userId
+            @RequestParam Long eventProductId
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         return ResponseEntity.ok(
                 queueService.getRank(eventProductId, userId)
         );
     }
 
-    @Operation(summary = "대기 상태 조회", description = "사용자의 대기 상태를 조회합니다.")
+    @Operation(summary = "대기 상태 조회", description = "현재 로그인한 사용자의 대기 상태를 조회합니다.")
     @GetMapping("/status")
     public ResponseEntity<QueueStatusResponse> getStatus(
-            @RequestParam Long eventProductId,
-            @RequestParam Long userId
+            @RequestParam Long eventProductId
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         return ResponseEntity.ok(
                 queueService.getStatus(eventProductId, userId)
         );
     }
 
-    @Operation(summary = "구매 가능 여부 조회", description = "사용자가 현재 구매 가능한 상태인지 조회합니다.")
+    @Operation(summary = "구매 가능 여부 조회", description = "현재 로그인한 사용자가 구매 가능한 상태인지 조회합니다.")
     @GetMapping("/available")
     public ResponseEntity<QueueAvailableResponse> getAvailable(
-            @RequestParam Long eventProductId,
-            @RequestParam Long userId
+            @RequestParam Long eventProductId
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         return ResponseEntity.ok(
                 queueService.getAvailable(eventProductId, userId)
         );
     }
 
-    @Operation(summary = "예상 대기 시간 조회", description = "사용자의 예상 대기 시간을 초 단위로 조회합니다.")
+    @Operation(summary = "예상 대기 시간 조회", description = "현재 로그인한 사용자의 예상 대기 시간을 초 단위로 조회합니다.")
     @GetMapping("/estimated-time")
     public ResponseEntity<QueueEstimatedTimeResponse> getEstimatedTime(
-            @RequestParam Long eventProductId,
-            @RequestParam Long userId
+            @RequestParam Long eventProductId
     ) {
+        Long userId = SecurityUtil.getCurrentUserId();
+
         return ResponseEntity.ok(
                 queueService.getEstimatedTime(eventProductId, userId)
         );
