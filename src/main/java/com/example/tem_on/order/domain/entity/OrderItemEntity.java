@@ -31,4 +31,7 @@ public class OrderItemEntity {
 
     @Column(nullable = false)
     private int totalPrice;
+
+    @Column(name = "product_name", nullable = false, length = 100)
+    private String productName;
 }

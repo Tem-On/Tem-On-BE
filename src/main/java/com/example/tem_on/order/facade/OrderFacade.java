@@ -9,6 +9,8 @@ import com.example.tem_on.order.domain.entity.OrderEntity;
 import com.example.tem_on.order.domain.entity.OrderItemEntity;
 import com.example.tem_on.order.domain.entity.OrderStatus;
 import com.example.tem_on.order.repository.OrderRepository;
+import com.example.tem_on.product.domain.entity.Product;
+import com.example.tem_on.product.repository.ProductRepository;
 import com.example.tem_on.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,7 @@ public class OrderFacade {
     private final OrderRepository orderRepository;
     private final StockService stockService;
     private final EventProductRepository eventProductRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     public OrderResponse createOrder(Long userId, OrderCreateRequest request) {
@@ -43,6 +46,9 @@ public class OrderFacade {
             EventProductEntity eventProduct = eventProductRepository.findById(itemRequest.getEventProductId())
                     .orElseThrow(() -> new IllegalArgumentException("이벤트 상품을 찾을 수 없습니다."));
 
+            Product product = productRepository.findById(eventProduct.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
             stockService.reserveStock(
                     eventProduct.getId(),
                     itemRequest.getQuantity()
@@ -53,6 +59,7 @@ public class OrderFacade {
 
             OrderItemEntity orderItem = OrderItemEntity.builder()
                     .eventProductId(eventProduct.getId())
+                    .productName(product.getName())
                     .quantity(itemRequest.getQuantity())
                     .orderPrice(orderPrice)
                     .totalPrice(totalPrice)
