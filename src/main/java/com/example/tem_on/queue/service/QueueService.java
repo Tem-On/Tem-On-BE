@@ -172,4 +172,17 @@ public class QueueService {
 
         return eventProduct;
     }
+
+    public void validatePurchaseAccess(Long eventProductId, Long userId) {
+        validateQueueAvailable(eventProductId);
+
+        if (!isAvailable(eventProductId, userId)) {
+            throw new RuntimeException("아직 구매 가능한 순번이 아닙니다.");
+        }
+    }
+
+    public void complete(Long eventProductId, Long userId) {
+        String availableKey = QueueRedisKey.availableKey(eventProductId, userId);
+        redisTemplate.delete(availableKey);
+    }
 }

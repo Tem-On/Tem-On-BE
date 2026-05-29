@@ -11,12 +11,15 @@ import com.example.tem_on.order.domain.entity.OrderStatus;
 import com.example.tem_on.order.repository.OrderRepository;
 import com.example.tem_on.product.domain.entity.Product;
 import com.example.tem_on.product.repository.ProductRepository;
+import com.example.tem_on.queue.service.QueueService;
 import com.example.tem_on.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -27,6 +30,7 @@ public class OrderFacade {
     private final StockService stockService;
     private final EventProductRepository eventProductRepository;
     private final ProductRepository productRepository;
+    private final QueueService queueService;
 
     @Transactional
     public OrderResponse createOrder(Long userId, OrderCreateRequest request) {
@@ -40,6 +44,7 @@ public class OrderFacade {
                 .build();
 
         int totalAmount = 0;
+        List<Long> orderedEventProductIds = new ArrayList<>();
 
         for (OrderCreateItemRequest itemRequest : request.getItems()) {
 
@@ -48,6 +53,11 @@ public class OrderFacade {
 
             Product product = productRepository.findById(eventProduct.getProductId())
                     .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+            queueService.validatePurchaseAccess(
+                    eventProduct.getId(),
+                    userId
+            );
 
             stockService.reserveStock(
                     eventProduct.getId(),
@@ -67,11 +77,16 @@ public class OrderFacade {
 
             order.addOrderItem(orderItem);
             totalAmount += totalPrice;
+            orderedEventProductIds.add(eventProduct.getId());
         }
 
         order.updateTotalAmount(totalAmount);
 
         OrderEntity savedOrder = orderRepository.save(order);
+
+        for (Long eventProductId : orderedEventProductIds) {
+            queueService.complete(eventProductId, userId);
+        }
 
         return OrderResponse.from(savedOrder);
     }
