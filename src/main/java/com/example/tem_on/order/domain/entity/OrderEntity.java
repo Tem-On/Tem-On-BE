@@ -54,4 +54,12 @@ public class OrderEntity {
         this.status = OrderStatus.CANCELED;
         this.canceledAt = LocalDateTime.now();
     }
+
+    public void changeStatus(OrderStatus status) {
+        this.status = status;
+
+        if (status == OrderStatus.CANCELED) {
+            this.canceledAt = LocalDateTime.now();
+        }
+    }
 }
