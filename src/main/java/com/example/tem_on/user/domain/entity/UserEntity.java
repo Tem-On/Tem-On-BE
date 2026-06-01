@@ -50,6 +50,9 @@ public class UserEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "fcm_token", length = 255)
+    private String fcmToken;
+
     public void updateProfile(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
             this.nickname = nickname;
@@ -58,5 +61,13 @@ public class UserEntity {
 
     public void updateStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public void updateFcmToken(String newFcmToken) {
+        this.fcmToken = newFcmToken;
+    }
+
+    public void clearFcmToken() {
+        this.fcmToken = null;
     }
 }

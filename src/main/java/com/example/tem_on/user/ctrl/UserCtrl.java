@@ -61,4 +61,20 @@ public class UserCtrl {
         UserResponse profile = userService.getUserProfile(userId);
         return ResponseEntity.ok(profile);
     }
+
+    @PatchMapping("/me/fcm-token")
+    @Operation(summary = "내 FCM 토큰 갱신", description = "프론트엔드에서 발급받은 FCM 디바이스 토큰을 회원 정보에 업데이트합니다.")
+    public ResponseEntity<Void> updateMyFcmToken(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String fcmToken) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Long userId = Long.parseLong(userDetails.getUsername());
+
+        userService.updateFcmToken(userId, fcmToken);
+
+        return ResponseEntity.ok().build();
+    }
 }

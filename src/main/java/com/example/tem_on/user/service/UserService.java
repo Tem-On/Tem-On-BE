@@ -36,4 +36,12 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다. id=" + userId));
         userRepository.delete(user);
     }
+
+    @Transactional
+    public void updateFcmToken(Long userId, String fcmToken) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        
+        user.updateFcmToken(fcmToken); 
+    }
 }
