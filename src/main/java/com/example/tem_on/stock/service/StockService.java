@@ -1,5 +1,7 @@
 package com.example.tem_on.stock.service;
 
+import com.example.tem_on.global.kafka.event.StockChangedEvent;
+import com.example.tem_on.global.kafka.producer.KafkaEventProducer;
 import com.example.tem_on.stock.domain.entity.StockEntity;
 import com.example.tem_on.stock.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StockService {
 
     private final StockRepository stockRepository;
+    private final KafkaEventProducer kafkaEventProducer;
 
     @Transactional(readOnly = true)
     public StockEntity getStock(Long eventProductId) {
@@ -28,23 +31,38 @@ public class StockService {
     public void reserveStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.reserve(quantity);
+        publishStockChanged(stock);
     }
 
     @Transactional
     public void releaseStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.release(quantity);
+        publishStockChanged(stock);
     }
 
     @Transactional
     public void confirmStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.confirm(quantity);
+        publishStockChanged(stock);
     }
 
     @Transactional
     public void cancelSoldStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.cancelSold(quantity);
+        publishStockChanged(stock);
+    }
+
+    private void publishStockChanged(StockEntity stock) {
+        StockChangedEvent event = StockChangedEvent.builder()
+                .eventProductId(stock.getEventProductId())
+                .remainingQuantity(stock.getRemainingQuantity())
+                .reservedQuantity(stock.getReservedQuantity())
+                .soldQuantity(stock.getSoldQuantity())
+                .build();
+
+        kafkaEventProducer.publish("stock-changed", event);
     }
 }
