@@ -28,27 +28,23 @@ public class StockService {
     public void reserveStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.reserve(quantity);
-        stockRepository.save(stock);
     }
 
     @Transactional
     public void releaseStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
-        stock.restore(quantity); 
-        stockRepository.save(stock);
+        stock.release(quantity);
     }
 
     @Transactional
-    public void decreaseStock(Long eventProductId, int quantity) {
+    public void confirmStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
-        stock.decrease(quantity);
-        stockRepository.save(stock);
+        stock.confirm(quantity);
     }
 
     @Transactional
-    public void restoreStock(Long eventProductId, int quantity) {
+    public void cancelSoldStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
-        stock.restore(quantity);
-        stockRepository.save(stock);
+        stock.cancelSold(quantity);
     }
 }
