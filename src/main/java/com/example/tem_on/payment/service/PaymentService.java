@@ -1,7 +1,10 @@
 package com.example.tem_on.payment.service;
 
+import com.example.tem_on.global.kafka.event.PaymentCanceledEvent;
+import com.example.tem_on.global.kafka.event.PaymentCompletedEvent;
+import com.example.tem_on.global.kafka.event.PaymentFailedEvent;
+import com.example.tem_on.global.kafka.producer.KafkaEventProducer;
 import com.example.tem_on.order.domain.entity.OrderEntity;
-import com.example.tem_on.order.domain.entity.OrderItemEntity;
 import com.example.tem_on.order.domain.entity.OrderStatus;
 import com.example.tem_on.order.repository.OrderRepository;
 import com.example.tem_on.payment.domain.dto.PaymentRequest;
@@ -9,12 +12,7 @@ import com.example.tem_on.payment.domain.dto.PaymentResponse;
 import com.example.tem_on.payment.domain.entity.PaymentEntity;
 import com.example.tem_on.payment.domain.entity.PaymentStatus;
 import com.example.tem_on.payment.repository.PaymentRepository;
-import com.example.tem_on.stock.service.StockService;
-import com.example.tem_on.global.kafka.event.PaymentCompletedEvent;
-import com.example.tem_on.global.kafka.producer.KafkaEventProducer;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +25,6 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final StockService stockService;
     private final KafkaEventProducer kafkaEventProducer;
 
     @Transactional
@@ -107,12 +104,22 @@ public class PaymentService {
         payment.fail();
         payment.getOrder().changeStatus(OrderStatus.CANCELED);
 
-        for (OrderItemEntity item : payment.getOrder().getOrderItems()) {
-            stockService.releaseStock(
-                    item.getEventProductId(),
-                    item.getQuantity()
-            );
-        }
+        PaymentFailedEvent event = PaymentFailedEvent.builder()
+                .orderId(payment.getOrder().getId())
+                .userId(payment.getOrder().getUserId())
+                .items(
+                        payment.getOrder().getOrderItems()
+                                .stream()
+                                .map(item -> PaymentFailedEvent.PaymentFailedItem.builder()
+                                        .eventProductId(item.getEventProductId())
+                                        .quantity(item.getQuantity())
+                                        .build()
+                                )
+                                .toList()
+                )
+                .build();
+
+        kafkaEventProducer.publish("payment-failed", event);
 
         return PaymentResponse.from(payment);
     }
@@ -130,16 +137,28 @@ public class PaymentService {
             throw new IllegalArgumentException("실패한 결제는 취소할 수 없습니다.");
         }
 
-        if (payment.getStatus() == PaymentStatus.READY) {
-            releaseReservedStock(payment.getOrder());
-        }
-
-        if (payment.getStatus() == PaymentStatus.PAID) {
-            cancelSoldStock(payment.getOrder());
-        }
+        PaymentStatus previousStatus = payment.getStatus();
 
         payment.cancel();
         payment.getOrder().changeStatus(OrderStatus.CANCELED);
+
+        PaymentCanceledEvent event = PaymentCanceledEvent.builder()
+                .orderId(payment.getOrder().getId())
+                .userId(payment.getOrder().getUserId())
+                .previousPaymentStatus(previousStatus.name())
+                .items(
+                        payment.getOrder().getOrderItems()
+                                .stream()
+                                .map(item -> PaymentCanceledEvent.PaymentCanceledItem.builder()
+                                        .eventProductId(item.getEventProductId())
+                                        .quantity(item.getQuantity())
+                                        .build()
+                                )
+                                .toList()
+                )
+                .build();
+
+        kafkaEventProducer.publish("payment-canceled", event);
 
         return PaymentResponse.from(payment);
     }
@@ -151,23 +170,5 @@ public class PaymentService {
     private PaymentEntity getPaymentEntity(Long paymentId) {
         return paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("결제를 찾을 수 없습니다."));
-    }
-
-    private void releaseReservedStock(OrderEntity order) {
-        for (OrderItemEntity item : order.getOrderItems()) {
-            stockService.releaseStock(
-                    item.getEventProductId(),
-                    item.getQuantity()
-            );
-        }
-    }
-
-    private void cancelSoldStock(OrderEntity order) {
-        for (OrderItemEntity item : order.getOrderItems()) {
-            stockService.cancelSoldStock(
-                    item.getEventProductId(),
-                    item.getQuantity()
-            );
-        }
     }
 }

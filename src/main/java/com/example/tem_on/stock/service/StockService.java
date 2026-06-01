@@ -31,21 +31,31 @@ public class StockService {
     public void reserveStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.reserve(quantity);
+        publishStockChanged(stock);
     }
 
     @Transactional
     public void releaseStock(Long eventProductId, int quantity) {
         StockEntity stock = getStock(eventProductId);
         stock.release(quantity);
+        publishStockChanged(stock);
     }
 
     @Transactional
     public void confirmStock(Long eventProductId, int quantity) {
-
         StockEntity stock = getStock(eventProductId);
-
         stock.confirm(quantity);
+        publishStockChanged(stock);
+    }
 
+    @Transactional
+    public void cancelSoldStock(Long eventProductId, int quantity) {
+        StockEntity stock = getStock(eventProductId);
+        stock.cancelSold(quantity);
+        publishStockChanged(stock);
+    }
+
+    private void publishStockChanged(StockEntity stock) {
         StockChangedEvent event = StockChangedEvent.builder()
                 .eventProductId(stock.getEventProductId())
                 .remainingQuantity(stock.getRemainingQuantity())
@@ -54,11 +64,5 @@ public class StockService {
                 .build();
 
         kafkaEventProducer.publish("stock-changed", event);
-    }
-
-    @Transactional
-    public void cancelSoldStock(Long eventProductId, int quantity) {
-        StockEntity stock = getStock(eventProductId);
-        stock.cancelSold(quantity);
     }
 }
