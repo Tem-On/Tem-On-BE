@@ -1,7 +1,8 @@
 package com.example.tem_on.notification.ctrl;
 
-import com.example.tem_on.auth.jwt.CustomUserDetails; 
+import com.example.tem_on.auth.jwt.CustomUserDetails;
 import com.example.tem_on.notification.domain.dto.NotificationResponse;
+import com.example.tem_on.notification.service.FcmService;
 import com.example.tem_on.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,12 +20,13 @@ import java.util.List;
 public class NotificationCtrl {
 
     private final NotificationService notificationService;
+    private final FcmService fcmService;
 
     @GetMapping
     @Operation(summary = "내 알림 목록 조회", description = "로그인한 유저의 전체 알림 내역을 최신순으로 조회합니다.")
     public ResponseEntity<List<NotificationResponse>> getNotifications(
-            @AuthenticationPrincipal CustomUserDetails userDetails) { 
-        
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
         return ResponseEntity.ok(notificationService.getNotifications(userDetails.getUserId()));
     }
 
@@ -32,7 +34,7 @@ public class NotificationCtrl {
     @Operation(summary = "안 읽은 알림 수 조회", description = "아직 읽지 않은 알림의 총 개수를 반환합니다.")
     public ResponseEntity<Long> getUnreadCount(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         return ResponseEntity.ok(notificationService.getUnreadCount(userDetails.getUserId()));
     }
 
@@ -41,7 +43,7 @@ public class NotificationCtrl {
     public ResponseEntity<String> readNotification(
             @PathVariable Long notificationId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         notificationService.readNotification(notificationId, userDetails.getUserId());
         return ResponseEntity.ok("알림 읽음 처리 완료");
     }
@@ -50,7 +52,7 @@ public class NotificationCtrl {
     @Operation(summary = "전체 알림 읽음 처리", description = "내가 받은 모든 알림을 한 번에 읽음 상태로 변경합니다.")
     public ResponseEntity<String> readAllNotifications(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         notificationService.readAllNotifications(userDetails.getUserId());
         return ResponseEntity.ok("모든 알림 읽음 처리 완료");
     }
@@ -60,8 +62,19 @@ public class NotificationCtrl {
     public ResponseEntity<String> deleteNotification(
             @PathVariable Long notificationId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         notificationService.deleteNotification(notificationId, userDetails.getUserId());
         return ResponseEntity.ok("알림 삭제 완료");
+    }
+
+    @PostMapping("/test-fcm")
+    @io.swagger.v3.oas.annotations.Operation(summary = "[테스트] FCM 푸시 발송 연동 확인", description = "가짜 토큰이나 실제 기기 토큰을 넣어 구글 FCM 서버와의 통신 상태를 테스트합니다.")
+    public ResponseEntity<String> testFcm(
+            @RequestParam String token,
+            @RequestParam String title,
+            @RequestParam String body) {
+
+        fcmService.sendPushNotification(token, title, body);
+        return ResponseEntity.ok("FCM 발송 요청 완료! 스프링 부트 콘솔 로그를 확인하세요.");
     }
 }
