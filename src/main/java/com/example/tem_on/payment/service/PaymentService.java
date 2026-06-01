@@ -10,6 +10,8 @@ import com.example.tem_on.payment.domain.entity.PaymentEntity;
 import com.example.tem_on.payment.domain.entity.PaymentStatus;
 import com.example.tem_on.payment.repository.PaymentRepository;
 import com.example.tem_on.stock.service.StockService;
+import com.example.tem_on.global.kafka.event.PaymentCompletedEvent;
+import com.example.tem_on.global.kafka.producer.KafkaEventProducer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +28,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final StockService stockService;
+    private final KafkaEventProducer kafkaEventProducer;
 
     @Transactional
     public PaymentResponse requestPayment(Long userId, PaymentRequest request) {
@@ -71,12 +74,23 @@ public class PaymentService {
         payment.success();
         payment.getOrder().changeStatus(OrderStatus.PAID);
 
-        for (OrderItemEntity item : payment.getOrder().getOrderItems()) {
-            stockService.confirmStock(
-                    item.getEventProductId(),
-                    item.getQuantity()
-            );
-        }
+        PaymentCompletedEvent event = PaymentCompletedEvent.builder()
+                .orderId(payment.getOrder().getId())
+                .userId(payment.getOrder().getUserId())
+                .totalAmount(payment.getAmount())
+                .items(
+                        payment.getOrder().getOrderItems()
+                                .stream()
+                                .map(item -> PaymentCompletedEvent.PaymentCompletedItem.builder()
+                                        .eventProductId(item.getEventProductId())
+                                        .quantity(item.getQuantity())
+                                        .build()
+                                )
+                                .toList()
+                )
+                .build();
+
+        kafkaEventProducer.publish("payment-completed", event);
 
         return PaymentResponse.from(payment);
     }
