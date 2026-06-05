@@ -1,6 +1,7 @@
 package com.example.tem_on.notification.ctrl;
 
 import com.example.tem_on.auth.jwt.CustomUserDetails;
+import com.example.tem_on.notification.domain.dto.NotificationRequest;
 import com.example.tem_on.notification.domain.dto.NotificationResponse;
 import com.example.tem_on.notification.service.FcmService;
 import com.example.tem_on.notification.service.NotificationService;
@@ -20,7 +21,6 @@ import java.util.List;
 public class NotificationCtrl {
 
     private final NotificationService notificationService;
-    private final FcmService fcmService;
 
     @GetMapping
     @Operation(summary = "내 알림 목록 조회", description = "로그인한 유저의 전체 알림 내역을 최신순으로 조회합니다.")
@@ -67,14 +67,22 @@ public class NotificationCtrl {
         return ResponseEntity.ok("알림 삭제 완료");
     }
 
-    @PostMapping("/test-fcm")
-    @io.swagger.v3.oas.annotations.Operation(summary = "[테스트] FCM 푸시 발송 연동 확인", description = "가짜 토큰이나 실제 기기 토큰을 넣어 구글 FCM 서버와의 통신 상태를 테스트합니다.")
-    public ResponseEntity<String> testFcm(
-            @RequestParam String token,
-            @RequestParam String title,
-            @RequestParam String body) {
+    @PostMapping("/test-noti")
+    @Operation(summary = "[테스트] 내 기기로 진짜 알림 쏘기", description = "JSON 바디로 데이터를 받아 템플릿 푸시를 전송합니다.")
+    public ResponseEntity<String> testMyRealFcm(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody NotificationRequest request) { 
 
-        fcmService.sendPushNotification(token, title, body);
-        return ResponseEntity.ok("FCM 발송 요청 완료! 스프링 부트 콘솔 로그를 확인하세요.");
+        String arg = (request.getItemOrEventName() != null && !request.getItemOrEventName().isBlank()) 
+                ? request.getItemOrEventName() : "테스트 상품";
+
+        notificationService.sendNotification(
+                userDetails.getUserId(),
+                request.getType(),       
+                request.getTemplate(),  
+                arg
+        );
+
+        return ResponseEntity.ok("내 계정의 토큰으로 FCM 실시간 푸시 전송 완료!");
     }
 }
