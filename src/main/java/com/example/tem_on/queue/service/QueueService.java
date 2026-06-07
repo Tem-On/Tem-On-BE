@@ -9,10 +9,12 @@ import com.example.tem_on.queue.domain.dto.QueueCurrentUsersResponse;
 import com.example.tem_on.queue.domain.dto.QueueEnterResponse;
 import com.example.tem_on.queue.domain.dto.QueueEstimatedTimeResponse;
 import com.example.tem_on.queue.domain.dto.QueueRankResponse;
+import com.example.tem_on.queue.domain.dto.QueueRealtimeResponse;
 import com.example.tem_on.queue.domain.dto.QueueStatusResponse;
 import com.example.tem_on.queue.redis.QueueRedisKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -24,6 +26,7 @@ public class QueueService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final EventProductRepository eventProductRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final int ALLOW_COUNT = 100;
     private static final long AVAILABLE_TTL_MINUTES = 10;
@@ -43,6 +46,8 @@ public class QueueService {
 
         Long rank = redisTemplate.opsForZSet()
                 .rank(queueKey, String.valueOf(userId));
+
+        publishQueueRealtime(eventProductId, "대기열 인원이 변경되었습니다.");
 
         return new QueueEnterResponse(
                 eventProductId,
@@ -144,6 +149,23 @@ public class QueueService {
 
         redisTemplate.opsForZSet()
                 .removeRange(queueKey, 0, ALLOW_COUNT - 1);
+
+        publishQueueRealtime(eventProductId, "대기열 앞 순번 사용자가 입장 가능 상태로 변경되었습니다.");
+    }
+
+    private void publishQueueRealtime(Long eventProductId, String message) {
+        String queueKey = QueueRedisKey.waitingQueueKey(eventProductId);
+
+        Long currentUsers = redisTemplate.opsForZSet().size(queueKey);
+
+        messagingTemplate.convertAndSend(
+                "/topic/queue/" + eventProductId,
+                new QueueRealtimeResponse(
+                        eventProductId,
+                        currentUsers,
+                        message
+                )
+        );
     }
 
     private boolean isAvailable(Long eventProductId, Long userId) {
