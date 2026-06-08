@@ -1,15 +1,20 @@
 package com.example.tem_on.global.kafka.consumer;
 
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import com.example.tem_on.global.kafka.event.StockChangedEvent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StockChangedConsumer {
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     @KafkaListener(
             topics = "stock-changed",
@@ -23,6 +28,11 @@ public class StockChangedConsumer {
                 event.getRemainingQuantity(),
                 event.getReservedQuantity(),
                 event.getSoldQuantity()
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/stocks/" + event.getEventProductId(),
+                event
         );
     }
 }
