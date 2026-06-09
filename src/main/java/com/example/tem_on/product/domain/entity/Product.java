@@ -59,4 +59,24 @@ public class Product {
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void update(
+        String name,
+        String description,
+        Integer price,
+        String imageUrl,
+        ProductCategory category,
+        ProductStatus status
+    ) {
+        if (name != null) this.name = name;
+        if (description != null) this.description = description;
+        if (price != null) this.price = price;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (category != null) this.category = category;
+        if (status != null) this.status = status;
+    }
+
+    public void delete() {
+        this.status = ProductStatus.DELETED;
+    }
 }
