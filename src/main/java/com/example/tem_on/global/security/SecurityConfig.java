@@ -44,7 +44,11 @@ public class SecurityConfig {
                                 "/queue-ws-test.html"
                         ).permitAll()
 
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("ADMIN")
+
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .addFilterBefore(

@@ -2,6 +2,7 @@ package com.example.tem_on.product.repository;
 
 import com.example.tem_on.product.domain.entity.Product;
 import com.example.tem_on.product.domain.entity.ProductCategory;
+import com.example.tem_on.product.domain.entity.ProductStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,4 +25,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             String keyword,
             Pageable pageable
     );
+    
+    Page<Product> findByStatusNot(
+            ProductStatus status,
+            Pageable pageable
+    );
+    
 }
