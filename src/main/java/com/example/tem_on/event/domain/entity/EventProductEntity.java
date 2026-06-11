@@ -48,4 +48,19 @@ public class EventProductEntity {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateProductInfo(Long productId, Integer eventPrice, Integer purchaseLimit) {
+        this.productId = productId;
+        this.eventPrice = eventPrice;
+        this.purchaseLimit = purchaseLimit;
+    }
+
+    public void updateStatus(EventProductStatus status) {
+        this.status = status;
+    }
+
+    public void delete() {
+        this.status = EventProductStatus.DELETED;
+    }
+    
 }
