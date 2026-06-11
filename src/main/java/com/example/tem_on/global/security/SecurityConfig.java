@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/ws/**",
                                 "/ws-test.html",
-                                "/queue-ws-test.html"
+                                "/queue-ws-test.html",
+                                "/admin-order-test.html"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
