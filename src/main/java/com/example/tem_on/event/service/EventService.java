@@ -21,7 +21,7 @@ public class EventService {
     private final EventRepository eventRepository;
 
     public List<EventResponse> getAllEvents() {
-        return eventRepository.findAll().stream()
+        return eventRepository.findAllActiveEventsWithoutDeleted().stream()
                 .map(EventResponse::new)
                 .collect(Collectors.toList());
     }
@@ -29,6 +29,11 @@ public class EventService {
     public EventResponse getEventDetail(Long eventId) {
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다. id=" + eventId));
+
+        if (event.getStatus() == EventStatus.DELETED) {
+            throw new IllegalArgumentException("존재하지 않는 이벤트입니다. id=" + eventId);
+        }
+
         return new EventResponse(event);
     }
 

@@ -3,7 +3,6 @@ package com.example.tem_on.notification.ctrl;
 import com.example.tem_on.auth.jwt.CustomUserDetails;
 import com.example.tem_on.notification.domain.dto.NotificationRequest;
 import com.example.tem_on.notification.domain.dto.NotificationResponse;
-import com.example.tem_on.notification.service.FcmService;
 import com.example.tem_on.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

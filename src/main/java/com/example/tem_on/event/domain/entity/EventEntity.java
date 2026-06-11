@@ -34,7 +34,7 @@ public class EventEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private EventStatus status; 
+    private EventStatus status;
 
     @CreatedDate
     @Column(updatable = false, nullable = false)
@@ -43,4 +43,19 @@ public class EventEntity {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    public void updateEventInfo(String title, String description, LocalDateTime startAt, LocalDateTime endAt) {
+        this.title = title;
+        this.description = description;
+        this.startAt = startAt;
+        this.endAt = endAt;
+    }
+
+    public void updateStatus(EventStatus status) {
+        this.status = status;
+    }
+
+    public void delete() {
+        this.status = EventStatus.DELETED;
+    }
 }
