@@ -22,7 +22,7 @@ public class EventProductService {
     private final ProductRepository productRepository; 
 
     public List<EventProductResponse> getAllEventProducts() {
-        return eventProductRepository.findAllWithEvent().stream()
+        return eventProductRepository.findAllActiveProductsWithoutDeleted().stream()
                 .map(ep -> {
                     Product product = productRepository.findById(ep.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));

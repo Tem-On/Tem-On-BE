@@ -188,7 +188,7 @@ public class QueueService {
             throw new RuntimeException("현재 진행 중인 이벤트가 아닙니다.");
         }
 
-        if (eventProduct.getStatus() != EventProductStatus.AVAILABLE) {
+        if (eventProduct.getStatus() != EventProductStatus.ON_SALE) {
             throw new RuntimeException("현재 구매 가능한 이벤트 상품이 아닙니다.");
         }
 
