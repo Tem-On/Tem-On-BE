@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 주문 테스트</title>
+</head>
+<body>
+
+<h2>관리자 주문 실시간 테스트</h2>
+
+<button onclick="connect()">연결</button>
+
+<div id="messages"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+
+let stompClient = null;
+
+function connect() {
+
+    const socket = new SockJS('/ws');
+
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function(frame) {
+
+        console.log("연결 성공");
+
+        stompClient.subscribe('/topic/admin/orders', function(message) {
+
+            const data = JSON.parse(message.body);
+
+            console.log(data);
+
+            document.getElementById("messages").innerHTML +=
+                "<p>" +
+                data.orderId +
+                " / " +
+                data.totalAmount +
+                "원" +
+                "</p>";
+        });
+    });
+}
+
+</script>
+
+</body>
+</html>

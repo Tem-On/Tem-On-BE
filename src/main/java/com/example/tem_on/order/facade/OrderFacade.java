@@ -16,6 +16,8 @@ import com.example.tem_on.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.tem_on.order.domain.dto.AdminOrderNotification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ public class OrderFacade {
     private final EventProductRepository eventProductRepository;
     private final ProductRepository productRepository;
     private final QueueService queueService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public OrderResponse createOrder(Long userId, OrderCreateRequest request) {
@@ -83,6 +86,11 @@ public class OrderFacade {
         order.updateTotalAmount(totalAmount);
 
         OrderEntity savedOrder = orderRepository.save(order);
+        
+        messagingTemplate.convertAndSend(
+        "/topic/admin/orders",
+                AdminOrderNotification.from(savedOrder)
+        );
 
         for (Long eventProductId : orderedEventProductIds) {
             queueService.complete(eventProductId, userId);
