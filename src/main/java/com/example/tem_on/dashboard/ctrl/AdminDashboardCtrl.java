@@ -1,6 +1,8 @@
 package com.example.tem_on.dashboard.ctrl;
 
 import com.example.tem_on.dashboard.domain.dto.AdminDashboardResponse;
+import com.example.tem_on.dashboard.domain.dto.AdminEventDashboardResponse;
+import com.example.tem_on.dashboard.domain.dto.AdminSalesDashboardResponse;
 import com.example.tem_on.dashboard.service.AdminDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,5 +25,25 @@ public class AdminDashboardCtrl {
     @GetMapping
     public ResponseEntity<AdminDashboardResponse> getDashboard() {
         return ResponseEntity.ok(adminDashboardService.getDashboard());
+    }
+
+    @Operation(
+            summary = "이벤트별 대시보드 조회",
+            description = "특정 이벤트의 이벤트상품 수, 총 매출, 총 판매 수량을 조회합니다."
+    )
+    @GetMapping("/events/{eventId}")
+    public ResponseEntity<AdminEventDashboardResponse> getEventDashboard(
+            @PathVariable Long eventId
+    ) {
+        return ResponseEntity.ok(adminDashboardService.getEventDashboard(eventId));
+    }
+
+    @Operation(
+            summary = "매출 통계 조회",
+            description = "총 매출, 결제 완료 주문 수, 평균 주문 금액을 조회합니다."
+    )
+    @GetMapping("/sales")
+    public ResponseEntity<AdminSalesDashboardResponse> getSalesDashboard() {
+        return ResponseEntity.ok(adminDashboardService.getSalesDashboard());
     }
 }

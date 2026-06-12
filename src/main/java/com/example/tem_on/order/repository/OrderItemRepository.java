@@ -5,6 +5,7 @@ import com.example.tem_on.order.domain.entity.OrderItemEntity;
 import com.example.tem_on.order.domain.entity.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -28,5 +29,29 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, Long
             """)
     List<AdminOrderEventProductStatisticsResponse> findEventProductStatisticsByOrderStatus(
             OrderStatus status
+    );
+
+    @Query("""
+        select coalesce(sum(oi.totalPrice), 0)
+        from OrderItemEntity oi
+        join oi.order o
+        where o.status = :status
+        and oi.eventProductId in :eventProductIds
+        """)
+    long sumTotalPriceByEventProductIdsAndOrderStatus(
+            @Param("eventProductIds") List<Long> eventProductIds,
+            @Param("status") OrderStatus status
+    );
+
+    @Query("""
+            select coalesce(sum(oi.quantity), 0)
+            from OrderItemEntity oi
+            join oi.order o
+            where o.status = :status
+            and oi.eventProductId in :eventProductIds
+            """)
+    long sumQuantityByEventProductIdsAndOrderStatus(
+            @Param("eventProductIds") List<Long> eventProductIds,
+            @Param("status") OrderStatus status
     );
 }
