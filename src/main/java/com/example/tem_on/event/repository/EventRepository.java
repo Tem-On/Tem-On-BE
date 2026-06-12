@@ -19,4 +19,6 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     @Query("SELECT e FROM EventEntity e WHERE e.status != com.example.tem_on.event.domain.entity.EventStatus.DELETED")
     List<EventEntity> findAllActiveEventsWithoutDeleted();
+
+    long countByStatus(EventStatus status);
 }
