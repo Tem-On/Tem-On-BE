@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/ws-test.html",
                                 "/queue-ws-test.html",
+                                "/admin-dashboard-test.html",
                                 "/admin-order-test.html"
                         ).permitAll()
 

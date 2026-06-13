@@ -1,6 +1,8 @@
 package com.example.tem_on.event.repository;
 
 import com.example.tem_on.event.domain.entity.EventProductEntity;
+import com.example.tem_on.event.domain.entity.EventProductStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,6 @@ public interface EventProductRepository extends JpaRepository<EventProductEntity
 
     @Query("SELECT ep FROM EventProductEntity ep WHERE ep.status != com.example.tem_on.event.domain.entity.EventProductStatus.DELETED")
     List<EventProductEntity> findAllActiveProductsWithoutDeleted();
+
+    long countByStatus(EventProductStatus status);
 }
