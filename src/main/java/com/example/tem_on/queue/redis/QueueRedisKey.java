@@ -15,4 +15,14 @@ public class QueueRedisKey {
                 + ":user:"
                 + userId;
     }
+
+    public static String availableKeyPattern(Long eventProductId) {
+        return "queue:available:event-product:"
+                + eventProductId
+                + ":user:*";
+    }
+
+    public static String statusKey(Long eventProductId) {
+        return "queue:status:event-product:" + eventProductId;
+    }
 }

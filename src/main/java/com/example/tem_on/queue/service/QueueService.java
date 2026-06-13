@@ -33,6 +33,7 @@ public class QueueService {
 
     public QueueEnterResponse enter(Long eventProductId, Long userId) {
         validateQueueAvailable(eventProductId);
+        validateQueueIsOpen(eventProductId);
 
         String queueKey = QueueRedisKey.waitingQueueKey(eventProductId);
 
@@ -46,6 +47,10 @@ public class QueueService {
 
         Long rank = redisTemplate.opsForZSet()
                 .rank(queueKey, String.valueOf(userId));
+
+        if (rank == null) {
+            throw new RuntimeException("대기열 순번 조회에 실패했습니다.");
+        }
 
         publishQueueRealtime(eventProductId, "대기열 인원이 변경되었습니다.");
 
@@ -206,5 +211,15 @@ public class QueueService {
     public void complete(Long eventProductId, Long userId) {
         String availableKey = QueueRedisKey.availableKey(eventProductId, userId);
         redisTemplate.delete(availableKey);
+    }
+
+    private void validateQueueIsOpen(Long eventProductId) {
+        String status = redisTemplate.opsForValue().get(
+                QueueRedisKey.statusKey(eventProductId)
+        );
+
+        if ("CLOSED".equals(status)) {
+            throw new RuntimeException("관리자가 대기열을 종료했습니다.");
+        }
     }
 }
