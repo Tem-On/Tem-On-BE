@@ -8,8 +8,10 @@ import com.example.tem_on.event.domain.entity.EventEntity;
 import com.example.tem_on.event.domain.entity.EventStatus;
 import com.example.tem_on.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.tem_on.event.domain.dto.EventRealtimeResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 public class AdminEventService {
 
     private final EventRepository eventRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public void createEvent(EventCreateRequest request) {
@@ -60,12 +63,27 @@ public class AdminEventService {
     }
 
     @Transactional
-    public void updateEventStatus(Long eventId, EventStatusUpdateRequest request) {
+    public void updateEventStatus(
+            Long eventId,
+            EventStatusUpdateRequest request
+    ) {
         EventEntity event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이벤트입니다. ID: " + eventId));
-        
-        EventStatus newStatus = EventStatus.valueOf(request.getStatus().toUpperCase());
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "존재하지 않는 이벤트입니다. ID: " + eventId
+                        ));
+
+        EventStatus newStatus =
+                EventStatus.valueOf(
+                        request.getStatus().toUpperCase()
+                );
+
         event.updateStatus(newStatus);
+
+        messagingTemplate.convertAndSend(
+                "/topic/events",
+                new EventRealtimeResponse(event)
+        );
     }
 
     @Transactional

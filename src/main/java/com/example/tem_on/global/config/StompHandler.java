@@ -12,6 +12,8 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
+
 @Component
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
@@ -37,8 +39,12 @@ public class StompHandler implements ChannelInterceptor {
     private void handleConnect(StompHeaderAccessor accessor) {
         String authorization = accessor.getFirstNativeHeader("Authorization");
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new MessagingException("WebSocket 인증 토큰이 없습니다.");
+        if (authorization == null || authorization.isBlank()) {
+            return;
+        }
+
+        if (!authorization.startsWith("Bearer ")) {
+            throw new MessagingException("잘못된 WebSocket 토큰 형식입니다.");
         }
 
         String token = authorization.substring(7);
@@ -69,15 +75,24 @@ public class StompHandler implements ChannelInterceptor {
             return;
         }
 
-        if (destination.startsWith("/topic/admin")) {
-            if (accessor.getUser() == null) {
-                throw new MessagingException("관리자 topic 구독 권한이 없습니다.");
-            }
+        if (destination.equals("/topic/events")) {
+            return;
+        }
 
-            boolean isAdmin = ((UsernamePasswordAuthenticationToken) accessor.getUser())
-                    .getAuthorities()
-                    .stream()
-                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        Principal user = accessor.getUser();
+
+        if (user == null) {
+            throw new MessagingException("로그인이 필요한 WebSocket topic입니다.");
+        }
+
+        if (destination.startsWith("/topic/admin")) {
+            boolean isAdmin =
+                    ((UsernamePasswordAuthenticationToken) user)
+                            .getAuthorities()
+                            .stream()
+                            .anyMatch(auth ->
+                                    auth.getAuthority().equals("ROLE_ADMIN")
+                            );
 
             if (!isAdmin) {
                 throw new MessagingException("ADMIN만 구독할 수 있는 topic입니다.");
