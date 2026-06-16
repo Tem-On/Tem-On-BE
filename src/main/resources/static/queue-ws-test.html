@@ -13,6 +13,15 @@
     <input id="eventProductId" value="1">
 </label>
 
+<br><br>
+
+<label>
+    Access Token :
+    <input id="token" style="width:600px">
+</label>
+
+<br><br>
+
 <button onclick="connect()">연결</button>
 
 <hr>
@@ -33,24 +42,34 @@
 
     function connect() {
         const eventProductId = document.getElementById("eventProductId").value;
+        const token = document.getElementById("token").value;
 
         const socket = new SockJS("/ws");
         stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, function () {
-            log("WebSocket 연결 성공");
-            log("구독 시작 : /topic/queue/" + eventProductId);
+        stompClient.connect(
+            {
+                Authorization: "Bearer " + token
+            },
+            function () {
+                log("WebSocket 연결 성공");
+                log("구독 시작 : /topic/queue/" + eventProductId);
 
-            stompClient.subscribe("/topic/queue/" + eventProductId, function (message) {
-                const queue = JSON.parse(message.body);
+                stompClient.subscribe("/topic/queue/" + eventProductId, function (message) {
+                    const queue = JSON.parse(message.body);
 
-                document.getElementById("currentUsers").innerText = queue.currentUsers;
-                document.getElementById("message").innerText = queue.message;
+                    document.getElementById("currentUsers").innerText = queue.currentUsers;
+                    document.getElementById("message").innerText = queue.message;
 
-                log("메시지 수신");
-                log(message.body);
-            });
-        });
+                    log("메시지 수신");
+                    log(message.body);
+                });
+            },
+            function (error) {
+                log("WebSocket 연결 실패");
+                log(error);
+            }
+        );
     }
 
     function log(message) {
