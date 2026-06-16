@@ -13,6 +13,15 @@
     <input id="eventProductId" value="1">
 </label>
 
+<br><br>
+
+<label>
+    Access Token :
+    <input id="token" style="width:600px">
+</label>
+
+<br><br>
+
 <button onclick="connect()">연결</button>
 
 <hr>
@@ -30,54 +39,44 @@
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 
 <script>
-
     let stompClient = null;
 
     function connect() {
-
-        const eventProductId =
-            document.getElementById("eventProductId").value;
+        const eventProductId = document.getElementById("eventProductId").value;
+        const token = document.getElementById("token").value;
 
         const socket = new SockJS("/ws");
-
         stompClient = Stomp.over(socket);
 
-        stompClient.connect({}, function () {
+        stompClient.connect(
+            {
+                Authorization: "Bearer " + token
+            },
+            function () {
+                log("WebSocket 연결 성공");
+                log("구독 시작 : /topic/stocks/" + eventProductId);
 
-            log("WebSocket 연결 성공");
-            log("구독 시작 : /topic/stocks/" + eventProductId);
+                stompClient.subscribe("/topic/stocks/" + eventProductId, function (message) {
+                    const stock = JSON.parse(message.body);
 
-            stompClient.subscribe(
-                "/topic/stocks/" + eventProductId,
-                function (message) {
-
-                    const stock =
-                        JSON.parse(message.body);
-
-                    document.getElementById("remaining").innerText =
-                        stock.remainingQuantity;
-
-                    document.getElementById("reserved").innerText =
-                        stock.reservedQuantity;
-
-                    document.getElementById("sold").innerText =
-                        stock.soldQuantity;
+                    document.getElementById("remaining").innerText = stock.remainingQuantity;
+                    document.getElementById("reserved").innerText = stock.reservedQuantity;
+                    document.getElementById("sold").innerText = stock.soldQuantity;
 
                     log("메시지 수신");
                     log(message.body);
-                }
-            );
-        });
+                });
+            },
+            function (error) {
+                log("WebSocket 연결 실패");
+                log(error);
+            }
+        );
     }
 
     function log(message) {
-
-        const logArea =
-            document.getElementById("log");
-
-        logArea.innerText += message + "\n";
+        document.getElementById("log").innerText += message + "\n";
     }
-
 </script>
 
 </body>
