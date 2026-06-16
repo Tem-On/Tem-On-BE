@@ -76,4 +76,19 @@ public class StockEntity {
         this.soldQuantity -= quantity;
         this.remainingQuantity += quantity;
     }
+
+    public void updateQuantity(int newTotalQuantity) {
+        int activeQuantity = this.reservedQuantity + this.soldQuantity;
+        if (newTotalQuantity < activeQuantity) {
+            throw new IllegalArgumentException("새로운 전체 재고는 (선점 재고 + 판매 재고)보다 적을 수 없습니다. 최소 필요 수량: " + activeQuantity);
+        }
+
+        this.totalQuantity = newTotalQuantity;
+        this.remainingQuantity = newTotalQuantity - this.reservedQuantity - this.soldQuantity;
+    }
+
+    public void forceSoldOut() {
+        this.totalQuantity = this.reservedQuantity + this.soldQuantity;
+        this.remainingQuantity = 0;
+    }
 }
