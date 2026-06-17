@@ -39,3 +39,4 @@ out/
 **/application.yaml
 .env
 firebase-service-account.json
+/logs/
