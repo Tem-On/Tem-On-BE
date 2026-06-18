@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -40,7 +41,7 @@ public class StompHandler implements ChannelInterceptor {
         String authorization = accessor.getFirstNativeHeader("Authorization");
 
         if (authorization == null || authorization.isBlank()) {
-            return;
+            throw new MessagingException("WebSocket 인증 토큰이 없습니다.");
         }
 
         if (!authorization.startsWith("Bearer ")) {
@@ -66,6 +67,12 @@ public class StompHandler implements ChannelInterceptor {
                 );
 
         accessor.setUser(authentication);
+
+        Map<String, Object> sessionAttributes = accessor.getSessionAttributes();
+
+        if (sessionAttributes != null) {
+            sessionAttributes.put("user", authentication);
+        }
     }
 
     private void handleSubscribe(StompHeaderAccessor accessor) {
@@ -80,6 +87,10 @@ public class StompHandler implements ChannelInterceptor {
         }
 
         Principal user = accessor.getUser();
+
+        if (user == null && accessor.getSessionAttributes() != null) {
+            user = (Principal) accessor.getSessionAttributes().get("user");
+        }
 
         if (user == null) {
             throw new MessagingException("로그인이 필요한 WebSocket topic입니다.");
