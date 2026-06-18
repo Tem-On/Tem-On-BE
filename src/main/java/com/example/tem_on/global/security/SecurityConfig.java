@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/queue-ws-test.html",
                                 "/admin-dashboard-test.html",
                                 "/event-ws-test.html",
+                                "/monitoring-ws-test.html",
                                 "/admin-order-test.html"
                         ).permitAll()
 
