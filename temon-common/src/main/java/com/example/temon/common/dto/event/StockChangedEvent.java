@@ -1,4 +1,4 @@
-package com.example.tem_on.global.kafka.event;
+package com.example.temon.common.dto.event;
 
 import lombok.*;
 
