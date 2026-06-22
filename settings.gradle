@@ -1,1 +1,8 @@
 rootProject.name = 'tem-on'
+
+include 'temon-auth-service'
+include 'temon-commerce-service'
+include 'temon-order-payment-service'
+include 'temon-queue-stock-service'
+include 'temon-common'
+include 'temon-gateway'
