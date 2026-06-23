@@ -40,3 +40,4 @@ out/
 .env
 firebase-service-account.json
 /logs/
+**/.env
