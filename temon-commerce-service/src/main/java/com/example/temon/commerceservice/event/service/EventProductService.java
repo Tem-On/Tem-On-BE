@@ -6,6 +6,8 @@ import com.example.temon.commerceservice.event.domain.entity.EventProductStatus;
 import com.example.temon.commerceservice.event.repository.EventProductRepository;
 import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.repository.ProductRepository;
+import com.example.temon.commerceservice.event.domain.dto.EventProductValidationResponse;
+import com.example.temon.commerceservice.event.domain.entity.EventStatus;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -50,5 +52,29 @@ public class EventProductService {
                     return new EventProductResponse(ep, product);
                 })
                 .collect(Collectors.toList());
+    }
+
+    public EventProductValidationResponse validateForQueue(Long eventProductId) {
+        return eventProductRepository.findByIdWithEvent(eventProductId)
+                .map(eventProduct -> {
+                    boolean queueAvailable =
+                            eventProduct.getEvent().getStatus() == EventStatus.OPEN
+                                    && eventProduct.getStatus() == EventProductStatus.ON_SALE;
+
+                    return new EventProductValidationResponse(
+                            eventProduct.getId(),
+                            true,
+                            queueAvailable,
+                            eventProduct.getEvent().getStatus().name(),
+                            eventProduct.getStatus().name()
+                    );
+                })
+                .orElseGet(() -> new EventProductValidationResponse(
+                        eventProductId,
+                        false,
+                        false,
+                        null,
+                        null
+                ));
     }
 }

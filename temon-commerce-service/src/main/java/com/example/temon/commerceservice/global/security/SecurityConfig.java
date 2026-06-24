@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/admin-order-test.html",
                                 "/api/products/**", 
                                 "/api/events/**",
-                                "/api/admin/**"
+                                "/api/admin/**",
+                                "/internal/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
