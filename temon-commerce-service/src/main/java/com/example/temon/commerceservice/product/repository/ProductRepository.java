@@ -1,32 +1,32 @@
-package com.example.tem_on.product.repository;
+package com.example.temon.commerceservice.product.repository;
 
-import com.example.tem_on.product.domain.entity.Product;
-import com.example.tem_on.product.domain.entity.ProductCategory;
-import com.example.tem_on.product.domain.entity.ProductStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
+import com.example.temon.commerceservice.product.domain.entity.ProductCategory;
+import com.example.temon.commerceservice.product.domain.entity.ProductStatus;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
-    Page<Product> findByCategoryAndNameContaining(
+    Page<ProductEntity> findByCategoryAndNameContaining(
             ProductCategory category,
             String keyword,
             Pageable pageable
     );
 
-    Page<Product> findByCategory(
+    Page<ProductEntity> findByCategory(
             ProductCategory category,
             Pageable pageable
     );
 
-    Page<Product> findByNameContaining(
+    Page<ProductEntity> findByNameContaining(
             String keyword,
             Pageable pageable
     );
     
-    Page<Product> findByStatusNot(
+    Page<ProductEntity> findByStatusNot(
             ProductStatus status,
             Pageable pageable
     );

@@ -8,11 +8,10 @@ import com.example.temon.commerceservice.event.domain.entity.EventEntity;
 import com.example.temon.commerceservice.event.domain.entity.EventStatus;
 import com.example.temon.commerceservice.event.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.temon.commerceservice.event.domain.dto.EventRealtimeResponse;
-
+import org.springframework.kafka.core.KafkaTemplate;
+import com.example.temon.common.dto.event.EventStatusChangedEvent;
 import java.util.List;
 import java.util.stream.Collectors;
 

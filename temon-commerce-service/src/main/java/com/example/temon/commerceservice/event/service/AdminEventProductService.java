@@ -1,16 +1,16 @@
-package com.example.tem_on.event.service;
+package com.example.temon.commerceservice.event.service;
 
-import com.example.tem_on.event.domain.dto.EventProductCreateRequest;
-import com.example.tem_on.event.domain.dto.EventProductResponse;
-import com.example.tem_on.event.domain.dto.EventProductStatusUpdateRequest;
-import com.example.tem_on.event.domain.dto.EventProductUpdateRequest;
-import com.example.tem_on.event.domain.entity.EventEntity;
-import com.example.tem_on.event.domain.entity.EventProductEntity;
-import com.example.tem_on.event.domain.entity.EventProductStatus;
-import com.example.tem_on.event.repository.EventProductRepository;
-import com.example.tem_on.event.repository.EventRepository;
-import com.example.tem_on.product.domain.entity.Product;
-import com.example.tem_on.product.repository.ProductRepository; 
+import com.example.temon.commerceservice.event.domain.dto.EventProductCreateRequest;
+import com.example.temon.commerceservice.event.domain.dto.EventProductResponse;
+import com.example.temon.commerceservice.event.domain.dto.EventProductStatusUpdateRequest;
+import com.example.temon.commerceservice.event.domain.dto.EventProductUpdateRequest;
+import com.example.temon.commerceservice.event.domain.entity.EventEntity;
+import com.example.temon.commerceservice.event.domain.entity.EventProductEntity;
+import com.example.temon.commerceservice.event.domain.entity.EventProductStatus;
+import com.example.temon.commerceservice.event.repository.EventProductRepository;
+import com.example.temon.commerceservice.event.repository.EventRepository;
+import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
+import com.example.temon.commerceservice.product.repository.ProductRepository; 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +49,7 @@ public class AdminEventProductService {
     public List<EventProductResponse> getEventProductList() {
         return eventProductRepository.findAllWithEvent().stream()
                 .map(productEntity -> {
-                    Product product = productRepository.findById(productEntity.getProductId())
+                    ProductEntity product = productRepository.findById(productEntity.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("상품 정보가 존재하지 않습니다. ID: " + productEntity.getProductId()));
                     return new EventProductResponse(productEntity, product);
                 })
@@ -64,7 +64,7 @@ public class AdminEventProductService {
             throw new IllegalArgumentException("이미 삭제 처리된 이벤트 상품입니다. ID: " + eventProductId);
         }
 
-        Product product = productRepository.findById(productEntity.getProductId())
+        ProductEntity product = productRepository.findById(productEntity.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("상품 정보가 존재하지 않습니다. ID: " + productEntity.getProductId()));
 
         return new EventProductResponse(productEntity, product);

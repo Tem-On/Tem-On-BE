@@ -1,6 +1,5 @@
 package com.example.temon.commerceservice.event.repository;
 
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,8 +16,8 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     @Query("SELECT e FROM EventEntity e WHERE e.status = :status AND e.startAt > :now ORDER BY e.startAt ASC")
     List<EventEntity> findUpcomingEvents(@Param("now") LocalDateTime now, @Param("status") EventStatus status);
 
-    @Query("SELECT e FROM EventEntity e WHERE e.status != com.example.tem_on.event.domain.entity.EventStatus.DELETED")
-    List<EventEntity> findAllActiveEventsWithoutDeleted();
+    @Query("SELECT e FROM EventEntity e WHERE e.status != :status")
+    List<EventEntity> findAllActiveEventsWithoutDeleted(@Param("status") EventStatus status);
 
     long countByStatus(EventStatus status);
 }

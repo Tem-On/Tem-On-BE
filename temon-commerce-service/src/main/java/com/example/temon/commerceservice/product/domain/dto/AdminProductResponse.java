@@ -4,7 +4,7 @@ package com.example.temon.commerceservice.product.domain.dto;
 import lombok.Builder;
 import lombok.Getter;
 import java.time.LocalDateTime;
-import com.example.temon.commerceservice.product.domain.entity.Product;
+import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.domain.entity.ProductCategory;
 import com.example.temon.commerceservice.product.domain.entity.ProductStatus;
 
@@ -22,7 +22,7 @@ public class AdminProductResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static AdminProductResponse from(Product product) {
+    public static AdminProductResponse from(ProductEntity product) {
         return AdminProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())

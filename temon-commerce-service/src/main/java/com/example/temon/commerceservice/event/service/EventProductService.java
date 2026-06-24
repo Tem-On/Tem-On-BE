@@ -2,6 +2,7 @@ package com.example.temon.commerceservice.event.service;
 
 import com.example.temon.commerceservice.event.domain.dto.EventProductResponse;
 import com.example.temon.commerceservice.event.domain.entity.EventProductEntity;
+import com.example.temon.commerceservice.event.domain.entity.EventProductStatus;
 import com.example.temon.commerceservice.event.repository.EventProductRepository;
 import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.repository.ProductRepository;
@@ -22,7 +23,7 @@ public class EventProductService {
     private final ProductRepository productRepository; 
 
     public List<EventProductResponse> getAllEventProducts() {
-        return eventProductRepository.findAllActiveProductsWithoutDeleted().stream()
+        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
                 .map(ep -> {
                     ProductEntity product = productRepository.findById(ep.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));

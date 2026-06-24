@@ -21,7 +21,7 @@ public class EventService {
     private final EventRepository eventRepository;
 
     public List<EventResponse> getAllEvents() {
-        return eventRepository.findAllActiveEventsWithoutDeleted().stream()
+        return eventRepository.findAllActiveEventsWithoutDeleted(EventStatus.DELETED).stream()
                 .map(EventResponse::new)
                 .collect(Collectors.toList());
     }
