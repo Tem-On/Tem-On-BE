@@ -6,6 +6,8 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 
 @Configuration
 public class SwaggerConfig {
@@ -26,7 +28,12 @@ public class SwaggerConfig {
                                 .bearerFormat("JWT")
                 );
 
+        Server gatewayServer = new Server()
+                .url("http://localhost:8080")
+                .description("Gateway");
+
         return new OpenAPI()
+                .servers(List.of(gatewayServer))
                 .components(components)
                 .addSecurityItem(securityRequirement);
     }

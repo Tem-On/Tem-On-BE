@@ -17,6 +17,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
 		return http
+				.cors(cors -> {})
 				.csrf(ServerHttpSecurity.CsrfSpec::disable)
 				.formLogin(ServerHttpSecurity.FormLoginSpec::disable)
 				.httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
@@ -26,6 +27,9 @@ public class SecurityConfig {
 								"/api/auth/**",
 								"/swagger-ui/**",
 								"/v3/api-docs/**",
+								"/auth-service/v3/api-docs",
+								"/commerce-service/v3/api-docs",
+								"/queue-stock-service/v3/api-docs",
 								"/webjars/**",
 								"/favicon.ico"
 						).permitAll()
