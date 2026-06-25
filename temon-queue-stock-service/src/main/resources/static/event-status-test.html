@@ -23,7 +23,7 @@
     function connect() {
         const token = document.getElementById("token").value;
 
-        const socket = new SockJS("/ws");
+        const socket = new SockJS("http://localhost:8080/ws");
         stompClient = Stomp.over(socket);
 
         stompClient.connect(

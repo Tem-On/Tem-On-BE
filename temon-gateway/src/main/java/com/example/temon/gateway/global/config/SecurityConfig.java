@@ -31,7 +31,8 @@ public class SecurityConfig {
 								"/commerce-service/v3/api-docs",
 								"/queue-stock-service/v3/api-docs",
 								"/webjars/**",
-								"/favicon.ico"
+								"/favicon.ico",
+								"/ws/**"
 						).permitAll()
 						.anyExchange().permitAll()
 				)
