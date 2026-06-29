@@ -1,6 +1,5 @@
 package com.example.temon.commerceservice.event.ctrl;
 
-
 import com.example.temon.commerceservice.event.domain.dto.EventProductCreateRequest;
 import com.example.temon.commerceservice.event.domain.dto.EventProductResponse;
 import com.example.temon.commerceservice.event.domain.dto.EventProductStatusUpdateRequest;
@@ -10,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/event-products")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminEventProductCtrl {
 
     private final AdminEventProductService adminEventProductService;
@@ -38,7 +39,9 @@ public class AdminEventProductCtrl {
 
     @GetMapping("/{eventProductId}")
     @Operation(summary = "이벤트 상품 상세 조회")
-    public ResponseEntity<EventProductResponse> getEventProductDetail(@PathVariable("eventProductId") Long eventProductId) {
+    public ResponseEntity<EventProductResponse> getEventProductDetail(
+            @PathVariable("eventProductId") Long eventProductId
+    ) {
         EventProductResponse product = adminEventProductService.getEventProductDetail(eventProductId);
         return ResponseEntity.ok(product);
     }
