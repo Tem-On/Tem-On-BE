@@ -29,6 +29,7 @@ public class SecurityConfig {
 								"/v3/api-docs/**",
 								"/auth-service/v3/api-docs",
 								"/commerce-service/v3/api-docs",
+								"/order-payment-service/v3/api-docs",
 								"/queue-stock-service/v3/api-docs",
 								"/webjars/**",
 								"/favicon.ico",

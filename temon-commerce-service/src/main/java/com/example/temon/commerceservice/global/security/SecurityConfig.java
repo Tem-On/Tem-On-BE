@@ -42,7 +42,8 @@ public class SecurityConfig {
                                 "/api/products/**", 
                                 "/api/events/**",
                                 "/api/admin/**",
-                                "/internal/**"
+                                "/internal/**",
+                                "/api/internal/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")

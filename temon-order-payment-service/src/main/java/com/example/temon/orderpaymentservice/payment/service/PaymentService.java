@@ -3,7 +3,7 @@ package com.example.temon.orderpaymentservice.payment.service;
 import com.example.temon.common.dto.event.PaymentCanceledEvent;
 import com.example.temon.common.dto.event.PaymentCompletedEvent;
 import com.example.temon.common.dto.event.PaymentFailedEvent;
-import com.example.temon.queuestockservice.global.kafka.producer.KafkaEventProducer;
+import com.example.temon.orderpaymentservice.global.kafka.producer.KafkaEventProducer;
 import com.example.temon.orderpaymentservice.order.domain.entity.OrderEntity;
 import com.example.temon.orderpaymentservice.order.domain.entity.OrderStatus;
 import com.example.temon.orderpaymentservice.order.repository.OrderRepository;
