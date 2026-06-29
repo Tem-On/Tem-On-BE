@@ -49,16 +49,14 @@ public class SecurityConfig {
                                 "/admin-order-test.html",
 
                                 "/api/products/**",
-                                "/api/events/**"
+                                "/api/events/**",
+
+                                "/internal/**",
+                                "/api/internal/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
-
-                        .requestMatchers(
-                                "/internal/**",
-                                "/api/internal/**"
-                        ).authenticated()
 
                         .anyRequest()
                         .authenticated()

@@ -4,13 +4,11 @@ import com.example.temon.queuestockservice.stock.domain.dto.StockRequest;
 import com.example.temon.queuestockservice.stock.domain.dto.StockResponse;
 import com.example.temon.queuestockservice.stock.domain.dto.StockUpdateRequest;
 import com.example.temon.queuestockservice.stock.service.AdminStockService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/stocks")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Stock", description = "관리자 전용 재고 관리 및 강제 제어 API")
 public class AdminStockCtrl {
 
@@ -47,8 +46,9 @@ public class AdminStockCtrl {
     @PatchMapping("/{eventProductId}")
     @Operation(summary = "관리자 권한 총 재고 수량 직접 수정", description = "URL 주소로 대상을 식별하고, Body에는 수정할 수량(quantity)만 보냅니다.")
     public ResponseEntity<String> updateStockQuantity(
-            @PathVariable Long eventProductId, 
-            @RequestBody StockUpdateRequest request) { 
+            @PathVariable Long eventProductId,
+            @RequestBody StockUpdateRequest request
+    ) {
         adminStockService.updateStockQuantity(eventProductId, request.getQuantity());
         return ResponseEntity.ok("재고 수량 수정 완료");
     }
