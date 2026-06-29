@@ -1,6 +1,5 @@
 package com.example.temon.orderpaymentservice.order.ctrl;
 
-
 import com.example.temon.orderpaymentservice.order.domain.dto.AdminOrderDetailResponse;
 import com.example.temon.orderpaymentservice.order.domain.dto.AdminOrderEventProductStatisticsResponse;
 import com.example.temon.orderpaymentservice.order.domain.dto.AdminOrderResponse;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/orders")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminOrderCtrl {
 
     private final AdminOrderService adminOrderService;
