@@ -41,3 +41,5 @@ out/
 firebase-service-account.json
 /logs/
 **/.env
+
+temon-queue-stock-service/logs/

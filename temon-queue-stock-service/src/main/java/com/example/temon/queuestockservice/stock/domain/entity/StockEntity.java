@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.CreatedDate;
 
 @Entity
 @Table(name = "stocks")
@@ -36,7 +37,8 @@ public class StockEntity {
 
     @Version
     private Long version;
-
+    
+    @CreatedDate
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updatedAt;
