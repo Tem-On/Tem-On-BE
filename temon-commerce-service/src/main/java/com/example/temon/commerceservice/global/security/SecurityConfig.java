@@ -1,15 +1,23 @@
 package com.example.temon.commerceservice.global.security;
 
+import com.example.temon.commerceservice.global.jwt.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -31,7 +39,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                // 아래는 테스트용으로 열어둔것들
+
                                 "/ws/**",
                                 "/ws-test.html",
                                 "/queue-ws-test.html",
@@ -39,9 +47,10 @@ public class SecurityConfig {
                                 "/event-ws-test.html",
                                 "/monitoring-ws-test.html",
                                 "/admin-order-test.html",
-                                "/api/products/**", 
+
+                                "/api/products/**",
                                 "/api/events/**",
-                                "/api/admin/**",
+
                                 "/internal/**",
                                 "/api/internal/**"
                         ).permitAll()
@@ -51,6 +60,11 @@ public class SecurityConfig {
 
                         .anyRequest()
                         .authenticated()
+                )
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
