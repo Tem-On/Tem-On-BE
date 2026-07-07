@@ -56,6 +56,9 @@ public class JwtAuthenticationFilter implements WebFilter {
 	private boolean isPermitAll(String path) {
 		return path.startsWith("/api/auth")
 				|| path.startsWith("/swagger-ui")
+				|| path.startsWith("/api/products")
+				|| path.startsWith("/api/events")
+				|| path.startsWith("/api/event-products")
 				|| path.startsWith("/v3/api-docs")
 				|| path.startsWith("/auth-service/v3/api-docs")
 				|| path.startsWith("/commerce-service/v3/api-docs")
