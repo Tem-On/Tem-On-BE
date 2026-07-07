@@ -9,6 +9,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import org.springframework.http.HttpMethod;
 
 @Component
 @RequiredArgsConstructor
@@ -18,6 +19,11 @@ public class JwtAuthenticationFilter implements WebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+		if (exchange.getRequest().getMethod() == HttpMethod.OPTIONS) {
+			return chain.filter(exchange);
+		}
+
 		String path = exchange.getRequest().getURI().getPath();
 
 		if (isPermitAll(path)) {
