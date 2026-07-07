@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        System.out.println("======> Commerce Service 인입 URL: " + request.getRequestURI());
 
         String authorization = request.getHeader("Authorization");
 
