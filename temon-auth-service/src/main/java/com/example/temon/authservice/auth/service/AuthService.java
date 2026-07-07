@@ -57,6 +57,10 @@ public class AuthService {
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .email(user.getEmail())
+                .role(user.getRole().name())
                 .build();
     }
 
