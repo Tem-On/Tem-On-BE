@@ -50,6 +50,7 @@ public class SecurityConfig {
 
                                 "/api/products/**",
                                 "/api/events/**",
+                                "/api/event-products/**",
 
                                 "/internal/**",
                                 "/api/internal/**"

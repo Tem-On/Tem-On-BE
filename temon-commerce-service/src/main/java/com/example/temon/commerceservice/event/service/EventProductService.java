@@ -77,4 +77,27 @@ public class EventProductService {
                         null
                 ));
     }
+
+    public List<EventProductResponse> getPopularProducts() {
+        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
+                .limit(4) 
+                .map(ep -> {
+                    ProductEntity product = productRepository.findById(ep.getProductId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
+                    return new EventProductResponse(ep, product);
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    public List<EventProductResponse> getShowcaseProducts() {
+        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
+                .filter(ep -> ep.getStatus() == EventProductStatus.ON_SALE || ep.getStatus() == EventProductStatus.READY)
+                .map(ep -> {
+                    ProductEntity product = productRepository.findById(ep.getProductId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
+                    return new EventProductResponse(ep, product);
+                })
+                .collect(Collectors.toList());
+    }
 }

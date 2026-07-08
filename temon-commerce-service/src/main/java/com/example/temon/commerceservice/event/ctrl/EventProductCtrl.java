@@ -34,4 +34,16 @@ public class EventProductCtrl {
     public ResponseEntity<List<EventProductResponse>> getProductsByEventId(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventProductService.getProductsByEventId(eventId));
     }
+
+    @GetMapping("/api/event-products/popular")
+    @Operation(summary = "메인인기 상품 조회", description = "실시간 인기가 높은 이벤트 상품 목록을 조회합니다.")
+    public ResponseEntity<List<EventProductResponse>> getPopularProducts() {
+        return ResponseEntity.ok(eventProductService.getPopularProducts());
+    }
+
+    @GetMapping("/api/event-products/showcase")
+    @Operation(summary = "메인 카테고리 쇼케이스 조회", description = "메인 화면에 노출할 쇼케이스 상품 목록을 조회합니다.")
+    public ResponseEntity<List<EventProductResponse>> getShowcaseProducts() {
+        return ResponseEntity.ok(eventProductService.getShowcaseProducts());
+    }
 }
