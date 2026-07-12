@@ -50,6 +50,32 @@ public class QueueService {
             throw new RuntimeException("대기열 순번 조회에 실패했습니다.");
         }
 
+        if (rank == 0) {
+            String availableKey = QueueRedisKey.availableKey(
+                    eventProductId,
+                    userId
+            );
+
+            redisTemplate.opsForValue().set(
+                    availableKey,
+                    "true",
+                    AVAILABLE_TTL_MINUTES,
+                    TimeUnit.MINUTES
+            );
+
+            redisTemplate.opsForZSet()
+                    .remove(queueKey, String.valueOf(userId));
+
+            publishQueueRealtime(eventProductId, "첫 번째 사용자가 바로 입장했습니다.");
+
+            return new QueueEnterResponse(
+                    eventProductId,
+                    userId,
+                    0L,
+                    "AVAILABLE"
+            );
+        }
+
         publishQueueRealtime(eventProductId, "대기열 인원이 변경되었습니다.");
 
         return new QueueEnterResponse(
