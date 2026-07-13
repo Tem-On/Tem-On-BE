@@ -21,11 +21,17 @@ public class AdminQueueService {
     private static final String CLOSED = "CLOSED";
 
     public AdminQueueResponse getQueue(Long eventProductId) {
-        String queueKey = QueueRedisKey.waitingQueueKey(eventProductId);
-        String statusKey = QueueRedisKey.statusKey(eventProductId);
+        String queueKey =
+                QueueRedisKey.waitingQueueKey(eventProductId);
 
-        Long waitingUsers = redisTemplate.opsForZSet().size(queueKey);
-        String status = redisTemplate.opsForValue().get(statusKey);
+        String statusKey =
+                QueueRedisKey.statusKey(eventProductId);
+
+        Long waitingUsers =
+                redisTemplate.opsForZSet().size(queueKey);
+
+        String status =
+                redisTemplate.opsForValue().get(statusKey);
 
         if (status == null) {
             status = OPEN;
@@ -44,7 +50,11 @@ public class AdminQueueService {
                 OPEN
         );
 
-        publishQueueMessage(eventProductId, "관리자가 대기열을 열었습니다.");
+        publishQueueMessage(
+                eventProductId,
+                "OPEN",
+                "관리자가 대기열을 열었습니다."
+        );
 
         return getQueue(eventProductId);
     }
@@ -55,35 +65,56 @@ public class AdminQueueService {
                 CLOSED
         );
 
-        publishQueueMessage(eventProductId, "관리자가 대기열을 종료했습니다.");
+        publishQueueMessage(
+                eventProductId,
+                "CLOSE",
+                "관리자가 대기열을 종료했습니다."
+        );
 
         return getQueue(eventProductId);
     }
 
     public void clearQueue(Long eventProductId) {
-        redisTemplate.delete(QueueRedisKey.waitingQueueKey(eventProductId));
-        redisTemplate.delete(QueueRedisKey.statusKey(eventProductId));
-
-        Set<String> availableKeys = redisTemplate.keys(
-                QueueRedisKey.availableKeyPattern(eventProductId)
+        redisTemplate.delete(
+                QueueRedisKey.waitingQueueKey(eventProductId)
         );
+
+        redisTemplate.delete(
+                QueueRedisKey.statusKey(eventProductId)
+        );
+
+        Set<String> availableKeys =
+                redisTemplate.keys(
+                        QueueRedisKey.availableKeyPattern(eventProductId)
+                );
 
         if (availableKeys != null && !availableKeys.isEmpty()) {
             redisTemplate.delete(availableKeys);
         }
 
-        publishQueueMessage(eventProductId, "관리자가 대기열을 초기화했습니다.");
+        publishQueueMessage(
+                eventProductId,
+                "RESET",
+                "관리자가 대기열을 초기화했습니다."
+        );
     }
 
-    private void publishQueueMessage(Long eventProductId, String message) {
-        Long currentUsers = redisTemplate.opsForZSet()
-                .size(QueueRedisKey.waitingQueueKey(eventProductId));
+    private void publishQueueMessage(
+            Long eventProductId,
+            String type,
+            String message
+    ) {
+        Long currentUsers =
+                redisTemplate.opsForZSet().size(
+                        QueueRedisKey.waitingQueueKey(eventProductId)
+                );
 
         messagingTemplate.convertAndSend(
                 "/topic/queue/" + eventProductId,
                 new QueueRealtimeResponse(
                         eventProductId,
                         currentUsers == null ? 0L : currentUsers,
+                        type,
                         message
                 )
         );
