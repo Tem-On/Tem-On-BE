@@ -35,7 +35,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/ws/**",
                                 "/api/queue/test-enter",
-                                "/event-status-test.html"
+                                "/event-status-test.html",
+                                "/api/stocks/**",
+                                "/internal/**", 
+                                "/api/internal/**"
                         ).permitAll()
 
                         .requestMatchers("/api/admin/**")
@@ -44,8 +47,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/monitoring/**")
                         .hasRole("ADMIN")
 
-                        .requestMatchers("/internal/**", "/api/internal/**")
-                        .authenticated()
+                        // .requestMatchers("/internal/**", "/api/internal/**")
+                        // .authenticated()
 
                         .anyRequest()
                         .authenticated()

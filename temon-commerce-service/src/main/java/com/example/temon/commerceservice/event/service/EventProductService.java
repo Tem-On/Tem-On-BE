@@ -1,21 +1,25 @@
 package com.example.temon.commerceservice.event.service;
 
 import com.example.temon.commerceservice.event.domain.dto.EventProductResponse;
+import com.example.temon.commerceservice.event.domain.dto.EventProductValidationResponse;
+import com.example.temon.commerceservice.event.domain.dto.StockInfoResponse; 
 import com.example.temon.commerceservice.event.domain.entity.EventProductEntity;
 import com.example.temon.commerceservice.event.domain.entity.EventProductStatus;
+import com.example.temon.commerceservice.event.domain.entity.EventStatus;
 import com.example.temon.commerceservice.event.repository.EventProductRepository;
+import com.example.temon.commerceservice.global.client.StockClient;
 import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.repository.ProductRepository;
-import com.example.temon.commerceservice.event.domain.dto.EventProductValidationResponse;
-import com.example.temon.commerceservice.event.domain.entity.EventStatus;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,13 +27,20 @@ public class EventProductService {
 
     private final EventProductRepository eventProductRepository;
     private final ProductRepository productRepository; 
+    private final StockClient stockClient; 
 
     public List<EventProductResponse> getAllEventProducts() {
-        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
+        List<EventProductEntity> epEntities = eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED);
+        
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(epEntities.stream().map(EventProductEntity::getId).toList());
+
+        return epEntities.stream()
                 .map(ep -> {
                     ProductEntity product = productRepository.findById(ep.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
-                    return new EventProductResponse(ep, product);
+                    
+                    StockInfoResponse stock = stockMap.get(ep.getId());
+                    return createResponseWithStock(ep, product, stock);
                 })
                 .collect(Collectors.toList());
     }
@@ -41,15 +52,23 @@ public class EventProductService {
         ProductEntity product = productRepository.findById(ep.getProductId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
         
-        return new EventProductResponse(ep, product);
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(List.of(eventProductId));
+        StockInfoResponse stock = stockMap.get(eventProductId);
+
+        return createResponseWithStock(ep, product, stock);
     }
 
     public List<EventProductResponse> getProductsByEventId(Long eventId) {
-        return eventProductRepository.findByEventId(eventId).stream()
+        List<EventProductEntity> epEntities = eventProductRepository.findByEventId(eventId);
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(epEntities.stream().map(EventProductEntity::getId).toList());
+
+        return epEntities.stream()
                 .map(ep -> {
                     ProductEntity product = productRepository.findById(ep.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
-                    return new EventProductResponse(ep, product);
+                    
+                    StockInfoResponse stock = stockMap.get(ep.getId());
+                    return createResponseWithStock(ep, product, stock);
                 })
                 .collect(Collectors.toList());
     }
@@ -79,25 +98,64 @@ public class EventProductService {
     }
 
     public List<EventProductResponse> getPopularProducts() {
-        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
-                .limit(4) 
+        List<EventProductEntity> epEntities = eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
+                .limit(4)
+                .toList();
+        
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(epEntities.stream().map(EventProductEntity::getId).toList());
+
+        return epEntities.stream()
                 .map(ep -> {
                     ProductEntity product = productRepository.findById(ep.getProductId())
                             .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
-                    return new EventProductResponse(ep, product);
+                    
+                    StockInfoResponse stock = stockMap.get(ep.getId());
+                    return createResponseWithStock(ep, product, stock);
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<EventProductResponse> getShowcaseProducts() {
+        List<EventProductEntity> epEntities = eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
+                .filter(ep -> ep.getStatus() == EventProductStatus.ON_SALE || ep.getStatus() == EventProductStatus.READY)
+                .toList();
+
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(epEntities.stream().map(EventProductEntity::getId).toList());
+
+        return epEntities.stream()
+                .map(ep -> {
+                    ProductEntity product = productRepository.findById(ep.getProductId())
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
+                    
+                    StockInfoResponse stock = stockMap.get(ep.getId());
+                    return createResponseWithStock(ep, product, stock);
                 })
                 .collect(Collectors.toList());
     }
 
 
-    public List<EventProductResponse> getShowcaseProducts() {
-        return eventProductRepository.findAllActiveProductsWithoutDeleted(EventProductStatus.DELETED).stream()
-                .filter(ep -> ep.getStatus() == EventProductStatus.ON_SALE || ep.getStatus() == EventProductStatus.READY)
-                .map(ep -> {
-                    ProductEntity product = productRepository.findById(ep.getProductId())
-                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다. id=" + ep.getProductId()));
-                    return new EventProductResponse(ep, product);
-                })
-                .collect(Collectors.toList());
+    private Map<Long, StockInfoResponse> fetchStockMap(List<Long> eventProductIds) {
+        if (eventProductIds == null || eventProductIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            List<StockInfoResponse> stocks = stockClient.getStocksByProductIds(eventProductIds);
+            return stocks.stream()
+                    .collect(Collectors.toMap(StockInfoResponse::getEventProductId, s -> s, (a, b) -> a));
+        } catch (Exception e) {
+            log.error("💥 QueueStockService Feign 통신 실패! 재고 기본값(0) 처리. 사유: {}", e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+
+    private EventProductResponse createResponseWithStock(EventProductEntity ep, ProductEntity product, StockInfoResponse stock) {
+        return new EventProductResponse(
+                ep,
+                product,
+                stock != null ? stock.getTotalQuantity() : 0,
+                stock != null ? stock.getRemainingQuantity() : 0,
+                stock != null ? stock.getSoldQuantity() : 0
+        );
     }
 }

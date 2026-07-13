@@ -24,7 +24,11 @@ public class EventProductResponse {
     private final String eventProductStatus; 
     private final LocalDateTime createdAt;
 
-    public EventProductResponse(EventProductEntity epEntity, ProductEntity product) {
+    private final Integer totalStock;
+    private final Integer remainingStock;
+    private final Integer soldCount;
+
+    public EventProductResponse(EventProductEntity epEntity, ProductEntity product, Integer totalStock, Integer remainingStock, Integer soldCount) {
         this.id = epEntity.getId();
         this.eventId = epEntity.getEvent().getId();
         this.eventTitle = epEntity.getEvent().getTitle();
@@ -40,5 +44,9 @@ public class EventProductResponse {
         this.purchaseLimit = epEntity.getPurchaseLimit();
         this.eventProductStatus = epEntity.getStatus().name();
         this.createdAt = epEntity.getCreatedAt();
+
+        this.totalStock = totalStock != null ? totalStock : 0;
+        this.remainingStock = remainingStock != null ? remainingStock : 0;
+        this.soldCount = soldCount != null ? soldCount : 0;
     }
 }
