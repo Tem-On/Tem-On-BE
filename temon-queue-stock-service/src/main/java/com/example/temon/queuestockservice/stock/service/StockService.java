@@ -5,6 +5,8 @@ import com.example.temon.queuestockservice.global.kafka.producer.KafkaEventProdu
 import com.example.temon.queuestockservice.stock.domain.entity.StockEntity;
 import com.example.temon.queuestockservice.stock.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,4 +67,13 @@ public class StockService {
 
         kafkaEventProducer.publish("stock-changed", event);
     }
+
+    @Transactional(readOnly = true)
+    public List<StockEntity> getStocksByEventProductIds(List<Long> eventProductIds) {
+        if (eventProductIds == null || eventProductIds.isEmpty()) {
+            return List.of();
+        }
+        return stockRepository.findByEventProductIdIn(eventProductIds);
+    }
+    
 }
