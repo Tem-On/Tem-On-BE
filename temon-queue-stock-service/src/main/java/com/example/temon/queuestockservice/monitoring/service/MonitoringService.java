@@ -38,14 +38,6 @@ public class MonitoringService {
 
     private static final String LOG_FILE_PATH = "./logs/info.log";
     private static final int MAX_LOG_COUNT = 100;
-
-    /*
-     * Spring Boot 기본 로그 예시
-     *
-     * 2026-07-15T21:51:47.401+09:00 INFO 16956 ---
-     * [temon-queue-stock-service] [restartedMain]
-     * c.e.t.q.QueueStockServiceApplication : 메시지
-     */
     private static final Pattern LOG_PATTERN = Pattern.compile(
             "^(\\S+)\\s+" +
             "(TRACE|DEBUG|INFO|WARN|ERROR)\\s+" +
@@ -59,9 +51,6 @@ public class MonitoringService {
     private final RedisConnectionFactory redisConnectionFactory;
     private final WebSocketSessionTracker webSocketSessionTracker;
 
-    /**
-     * 프론트의 SystemMetric[] 타입에 맞는 시스템 지표를 반환합니다.
-     */
     public List<SystemMetricResponse> getSystemMetrics() {
         List<SystemMetricResponse> metrics = new ArrayList<>();
 
@@ -146,9 +135,6 @@ public class MonitoringService {
         return metrics;
     }
 
-    /**
-     * 로그 파일의 최근 로그를 읽어 프론트 LogEntry[] 형식으로 변환합니다.
-     */
     public List<MonitoringLogResponse> getRecentLogs() {
         File logFile = new File(LOG_FILE_PATH);
 
@@ -181,11 +167,7 @@ public class MonitoringService {
 
             List<MonitoringLogResponse> result = new ArrayList<>();
 
-            /*
-             * 로그 파일의 끝부분부터 읽어서 최신 로그가 위에 오도록 합니다.
-             * Kafka 설정값처럼 여러 줄로 출력되는 부가 행은 제외하고,
-             * timestamp로 시작하는 실제 로그 행만 반환합니다.
-             */
+
             for (int i = allLines.size() - 1;
                  i >= 0 && result.size() < MAX_LOG_COUNT;
                  i--) {
@@ -326,10 +308,7 @@ public class MonitoringService {
         );
     }
 
-    /**
-     * 프론트는 INFO, WARN, ERROR만 허용하므로
-     * TRACE와 DEBUG는 INFO로 변환합니다.
-     */
+
     private String normalizeLevel(String level) {
         if (level == null) {
             return "INFO";
