@@ -18,9 +18,13 @@ public class OrderResponse {
     private String status;
     private LocalDateTime orderedAt;
     private LocalDateTime canceledAt;
+    private Long paymentId;
     private List<OrderItemResponse> items;
 
-    public static OrderResponse from(OrderEntity order) {
+    public static OrderResponse from(
+            OrderEntity order,
+            Long paymentId
+    ) {
         return OrderResponse.builder()
                 .orderId(order.getId())
                 .userId(order.getUserId())
@@ -29,8 +33,10 @@ public class OrderResponse {
                 .status(order.getStatus().name())
                 .orderedAt(order.getOrderedAt())
                 .canceledAt(order.getCanceledAt())
+                .paymentId(paymentId)
                 .items(
-                        order.getOrderItems().stream()
+                        order.getOrderItems()
+                                .stream()
                                 .map(OrderItemResponse::from)
                                 .toList()
                 )
