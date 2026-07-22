@@ -5,6 +5,9 @@ import com.example.temon.commerceservice.product.domain.entity.ProductCategory;
 import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,4 +47,15 @@ public class ProductService {
 
         return ProductResponse.from(product);
     }
+
+    public List<ProductResponse> getProductsByIds(List<Long> ids) {
+    if (ids == null || ids.isEmpty()) {
+        return List.of();
+    }
+
+    return productRepository.findAllById(ids)
+            .stream()
+            .map(ProductResponse::from) 
+            .toList();
+}
 }

@@ -12,14 +12,13 @@ import com.example.temon.commerceservice.product.domain.entity.ProductEntity;
 import com.example.temon.commerceservice.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -143,7 +142,7 @@ public class EventProductService {
             return stocks.stream()
                     .collect(Collectors.toMap(StockInfoResponse::getEventProductId, s -> s, (a, b) -> a));
         } catch (Exception e) {
-            log.error("💥 QueueStockService Feign 통신 실패! 재고 기본값(0) 처리. 사유: {}", e.getMessage());
+
             return Collections.emptyMap();
         }
     }
@@ -190,10 +189,36 @@ public class EventProductService {
                 StockInfoResponse stock = stockMap.get(ep.getId());
                 result.add(createResponseWithStock(ep, product, stock));
             } else {
-                log.warn("Matching Product not found for productId: {}", ep.getProductId());
+
             }
         }
 
         return result;
     }
+
+    public List<EventProductResponse> getEventProductsByIds(List<Long> eventProductIds) {
+    if (eventProductIds == null || eventProductIds.isEmpty()) {
+        return Collections.emptyList();
+    }
+
+    List<EventProductEntity> epEntities = eventProductRepository.findAllById(eventProductIds);
+    if (epEntities.isEmpty()) {
+        return Collections.emptyList();
+    }
+
+    Map<Long, StockInfoResponse> stockMap = fetchStockMap(eventProductIds);
+
+    List<EventProductResponse> result = new ArrayList<>();
+        for (EventProductEntity ep : epEntities) {
+                ProductEntity product = productRepository.findById(ep.getProductId()).orElse(null);
+                if (product != null) {
+                StockInfoResponse stock = stockMap.get(ep.getId());
+                result.add(createResponseWithStock(ep, product, stock));
+                } else {
+
+                }
+        }
+
+        return result;
+        }
 }

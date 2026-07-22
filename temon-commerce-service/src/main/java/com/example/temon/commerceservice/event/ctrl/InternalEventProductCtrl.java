@@ -34,4 +34,11 @@ public class InternalEventProductCtrl {
     ) {
         return eventProductService.validateForQueue(eventProductId);
     }
+
+    @PostMapping("/batch")
+    public List<EventProductResponse> getEventProductsByIds(
+            @RequestBody List<Long> eventProductIds
+    ) {
+        return eventProductService.getEventProductsByIds(eventProductIds); 
+    }
 }

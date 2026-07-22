@@ -15,16 +15,18 @@ public class AdminOrderResponse {
     private String orderNumber;
     private int totalAmount;
     private String status;
+    private String productName;
     private LocalDateTime orderedAt;
     private LocalDateTime canceledAt;
 
-    public static AdminOrderResponse from(OrderEntity order) {
+    public static AdminOrderResponse from(OrderEntity order, String productName) {
         return AdminOrderResponse.builder()
                 .orderId(order.getId())
                 .userId(order.getUserId())
                 .orderNumber(order.getOrderNumber())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus().name())
+                .productName(productName)
                 .orderedAt(order.getOrderedAt())
                 .canceledAt(order.getCanceledAt())
                 .build();
