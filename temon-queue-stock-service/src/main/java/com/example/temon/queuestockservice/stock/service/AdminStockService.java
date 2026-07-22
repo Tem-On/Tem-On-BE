@@ -1,5 +1,7 @@
 package com.example.temon.queuestockservice.stock.service;
 
+import com.example.temon.queuestockservice.global.client.CommerceEventProductClient;
+import com.example.temon.queuestockservice.global.client.EventProductClientResponse;
 import com.example.temon.queuestockservice.stock.domain.dto.StockRequest;
 import com.example.temon.queuestockservice.stock.domain.dto.StockResponse;
 import com.example.temon.queuestockservice.stock.domain.entity.StockEntity;
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map; 
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,6 +21,7 @@ import java.util.stream.Collectors;
 public class AdminStockService {
 
     private final StockRepository stockRepository;
+    private final CommerceEventProductClient commerceEventProductClient;
 
     @Transactional
     public void createStock(StockRequest request) {
@@ -37,15 +42,38 @@ public class AdminStockService {
     }
 
     public List<StockResponse> getStockList() {
-        return stockRepository.findAll().stream()
-                .map(StockResponse::new)
+        Map<Long, EventProductClientResponse> eventProductMap;
+        try {
+            List<EventProductClientResponse> eventProducts = commerceEventProductClient.getAllEventProducts();
+            eventProductMap = eventProducts.stream()
+                    .collect(Collectors.toMap(EventProductClientResponse::id, Function.identity(), (p1, p2) -> p1));
+        } catch (Exception e) {
+            eventProductMap = Map.of();
+        }
+
+        List<StockEntity> stocks = stockRepository.findAll();
+
+        Map<Long, EventProductClientResponse> finalMap = eventProductMap;
+        return stocks.stream()
+                .map(stock -> {
+                    EventProductClientResponse productInfo = finalMap.get(stock.getEventProductId()); 
+                    return new StockResponse(stock, productInfo); 
+                })
                 .collect(Collectors.toList());
     }
 
     public StockResponse getStockDetail(Long eventProductId) {
         StockEntity stock = stockRepository.findByEventProductId(eventProductId)
                 .orElseThrow(() -> new IllegalArgumentException("재고 정보가 존재하지 않습니다. 상품 ID: " + eventProductId));
-        return new StockResponse(stock);
+
+        EventProductClientResponse productInfo = null;
+        try {
+            productInfo = commerceEventProductClient.getEventProduct(eventProductId);
+        } catch (Exception e) {
+        
+        }
+
+        return new StockResponse(stock, productInfo); 
     }
 
     @Transactional

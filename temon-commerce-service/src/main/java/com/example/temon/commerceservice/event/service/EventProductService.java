@@ -158,4 +158,29 @@ public class EventProductService {
                 stock != null ? stock.getSoldQuantity() : 0
         );
     }
+
+    public List<EventProductResponse> getAllEventProductsInternal() {
+        
+        List<EventProductEntity> epEntities = eventProductRepository.findAllWithEvent();
+
+        if (epEntities.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> epIds = epEntities.stream().map(EventProductEntity::getId).toList();
+        Map<Long, StockInfoResponse> stockMap = fetchStockMap(epIds);
+
+        List<EventProductResponse> result = new ArrayList<>();
+        for (EventProductEntity ep : epEntities) {
+            ProductEntity product = productRepository.findById(ep.getProductId()).orElse(null);
+            if (product != null) {
+                StockInfoResponse stock = stockMap.get(ep.getId());
+                result.add(createResponseWithStock(ep, product, stock));
+            } else {
+                log.warn("Matching Product not found for productId: {}", ep.getProductId());
+            }
+        }
+
+        return result;
+    }
 }

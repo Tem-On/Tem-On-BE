@@ -4,6 +4,9 @@ import com.example.temon.commerceservice.event.domain.dto.EventProductResponse;
 import com.example.temon.commerceservice.event.domain.dto.EventProductValidationResponse;
 import com.example.temon.commerceservice.event.service.EventProductService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +16,11 @@ public class InternalEventProductCtrl {
 
     private final EventProductService eventProductService;
 
+    @GetMapping
+    public List<EventProductResponse> getAllEventProductsInternal() {
+        return eventProductService.getAllEventProductsInternal();
+    }
+    
     @GetMapping("/{eventProductId}")
     public EventProductResponse getEventProduct(
             @PathVariable Long eventProductId
