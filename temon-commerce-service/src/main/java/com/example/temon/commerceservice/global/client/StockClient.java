@@ -7,11 +7,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-
-@FeignClient(name = "temon-queue-stock-service",
-        url = "http://localhost:8084")
+@FeignClient(
+        name = "temon-queue-stock-service",
+        url = "${QUEUE_STOCK_URL:http://localhost:8084}"
+)
 public interface StockClient {
-    
+
     @GetMapping("/internal/stocks/bulk")
-    List<StockInfoResponse> getStocksByProductIds(@RequestParam("eventProductIds") List<Long> eventProductIds);
+    List<StockInfoResponse> getStocksByProductIds(
+            @RequestParam("eventProductIds")
+            List<Long> eventProductIds
+    );
 }

@@ -149,13 +149,26 @@ public class EventProductService {
     }
 
 
-    private EventProductResponse createResponseWithStock(EventProductEntity ep, ProductEntity product, StockInfoResponse stock) {
+    private EventProductResponse createResponseWithStock(
+            EventProductEntity eventProduct,
+            ProductEntity product,
+            StockInfoResponse stock
+    ) {
         return new EventProductResponse(
-                ep,
+                eventProduct,
                 product,
-                stock != null ? stock.getTotalQuantity() : 0,
-                stock != null ? stock.getRemainingQuantity() : 0,
-                stock != null ? stock.getSoldQuantity() : 0
+                stock != null
+                        ? stock.getTotalQuantity()
+                        : 0,
+                stock != null
+                        ? stock.getRemainingQuantity()
+                        : 0,
+                stock != null
+                        ? stock.getReservedQuantity()
+                        : 0,
+                stock != null
+                        ? stock.getSoldQuantity()
+                        : 0
         );
     }
 

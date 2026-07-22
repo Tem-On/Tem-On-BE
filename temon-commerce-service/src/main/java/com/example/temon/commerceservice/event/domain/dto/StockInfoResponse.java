@@ -6,8 +6,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class StockInfoResponse {
+
     private Long eventProductId;
+
     private Integer totalQuantity;
+
     private Integer remainingQuantity;
-    private Integer soldQuantity; 
+
+    private Integer reservedQuantity;
+
+    private Integer soldQuantity;
 }
