@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.example.temon.queuestockservice.queue.metric.QueueMetrics;
+
 @Service
 @RequiredArgsConstructor
 public class QueueService {
@@ -25,6 +27,7 @@ public class QueueService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private final CommerceEventProductClient commerceEventProductClient;
+    private final QueueMetrics queueMetrics;
 
 
     private static final int ALLOW_COUNT = 1;
@@ -55,12 +58,20 @@ public class QueueService {
                 Double score = redisTemplate.opsForZSet()
                         .score(queueKey, String.valueOf(userId));
 
+                boolean newlyEntered = false;
+
                 if (score == null) {
-                        redisTemplate.opsForZSet().add(
-                                queueKey,
-                                String.valueOf(userId),
-                                System.currentTimeMillis()
-                        );
+                Boolean added = redisTemplate.opsForZSet().add(
+                        queueKey,
+                        String.valueOf(userId),
+                        System.currentTimeMillis()
+                );
+
+                newlyEntered = Boolean.TRUE.equals(added);
+
+                if (newlyEntered) {
+                        queueMetrics.incrementEnter(eventProductId);
+                }
                 }
 
                 Long rank = redisTemplate.opsForZSet()
@@ -95,6 +106,9 @@ public class QueueService {
                                 QueueRedisKey.enteredCountKey(eventProductId)
                         );
 
+                        queueMetrics.incrementAdmitted(eventProductId);
+                        refreshWaitingMetric(eventProductId);
+
                         publishQueueRealtime(
                                 eventProductId,
                                 "ENTER",
@@ -107,13 +121,15 @@ public class QueueService {
                                 0L,
                                 "AVAILABLE"
                         );
-                }
+                        }
 
                 publishQueueRealtime(
                         eventProductId,
                         "ENTER",
                         "대기열 인원이 변경되었습니다."
                 );
+
+                refreshWaitingMetric(eventProductId);
 
                 return new QueueEnterResponse(
                         eventProductId,
@@ -157,26 +173,33 @@ public class QueueService {
                 long addedCount = 0L;
 
                 for (int i = 0; i < count; i++) {
-                long testUserId = startUserId + i;
+                        long testUserId = startUserId + i;
 
-                Boolean added = redisTemplate.opsForZSet().add(
-                        queueKey,
-                        String.valueOf(testUserId),
-                        baseScore + i
-                );
+                        Boolean added = redisTemplate.opsForZSet().add(
+                                queueKey,
+                                String.valueOf(testUserId),
+                                baseScore + i
+                        );
 
-                if (Boolean.TRUE.equals(added)) {
-                        addedCount++;
-                }
-                }
+                        if (Boolean.TRUE.equals(added)) {
+                                addedCount++;
+                        }
+                        }
 
-                publishQueueRealtime(
-                        eventProductId,
-                        "ENTER",
-                        "테스트 사용자 "
-                                + addedCount
-                                + "명이 대기열에 추가되었습니다."
-                );
+                        queueMetrics.incrementEnter(
+                                eventProductId,
+                                addedCount
+                        );
+
+                        refreshWaitingMetric(eventProductId);
+
+                        publishQueueRealtime(
+                                eventProductId,
+                                "ENTER",
+                                "테스트 사용자 "
+                                        + addedCount
+                                        + "명이 대기열에 추가되었습니다."
+                        );
 
                 return addedCount;
         }
@@ -324,6 +347,13 @@ public class QueueService {
                         ALLOW_COUNT - 1
                 );
 
+                queueMetrics.incrementAdmitted(
+                        eventProductId,
+                        users.size()
+                );
+
+                refreshWaitingMetric(eventProductId);
+
                 publishQueueRealtime(
                         eventProductId,
                         "EXPIRE",
@@ -345,16 +375,20 @@ public class QueueService {
         }
 
         public void complete(
-                Long eventProductId,
-                Long userId
-        ) {
+                        Long eventProductId,
+                        Long userId
+                ) {
                 String availableKey =
                         QueueRedisKey.availableKey(
                                 eventProductId,
                                 userId
                         );
 
-                redisTemplate.delete(availableKey);
+                Boolean deleted = redisTemplate.delete(availableKey);
+
+                if (Boolean.TRUE.equals(deleted)) {
+                        queueMetrics.incrementCompleted(eventProductId);
+                }
 
                 publishQueueRealtime(
                         eventProductId,
@@ -454,4 +488,19 @@ public class QueueService {
                 );
                 }
         }
+
+        private void refreshWaitingMetric(
+                Long eventProductId
+        ) {
+        String queueKey =
+                QueueRedisKey.waitingQueueKey(eventProductId);
+
+        Long currentUsers = redisTemplate.opsForZSet()
+                .size(queueKey);
+
+        queueMetrics.updateWaitingCount(
+                eventProductId,
+                currentUsers == null ? 0L : currentUsers
+        );
         }
+}

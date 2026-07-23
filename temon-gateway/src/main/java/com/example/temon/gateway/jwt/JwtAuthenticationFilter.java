@@ -72,6 +72,7 @@ public class JwtAuthenticationFilter implements WebFilter {
 				|| path.startsWith("/queue-stock-service/v3/api-docs")
 				|| path.startsWith("/webjars")
 				|| path.startsWith("/favicon.ico")
-				|| path.startsWith("/ws");
+				|| path.startsWith("/ws")
+				|| path.startsWith("/actuator");
 	}
 }
