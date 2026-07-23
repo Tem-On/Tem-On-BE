@@ -32,39 +32,273 @@ public class QueueService {
 
     private static final long AVAILABLE_TTL_MINUTES = 10;
 
-    public QueueEnterResponse enter(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateQueueAvailable(eventProductId);
-        validateQueueIsOpen(eventProductId);
+        public QueueEnterResponse enter(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateQueueAvailable(eventProductId);
+                validateQueueIsOpen(eventProductId);
 
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
+        
+                if (isAvailable(eventProductId, userId)) {
+                        return new QueueEnterResponse(
+                                eventProductId,
+                                userId,
+                                0L,
+                                "AVAILABLE"
+                        );
+                }
 
-        Double score = redisTemplate.opsForZSet()
-                .score(queueKey, String.valueOf(userId));
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
 
+                Double score = redisTemplate.opsForZSet()
+                        .score(queueKey, String.valueOf(userId));
 
-        if (score == null) {
-            redisTemplate.opsForZSet().add(
-                    queueKey,
-                    String.valueOf(userId),
-                    System.currentTimeMillis()
-            );
+                if (score == null) {
+                        redisTemplate.opsForZSet().add(
+                                queueKey,
+                                String.valueOf(userId),
+                                System.currentTimeMillis()
+                        );
+                }
+
+                Long rank = redisTemplate.opsForZSet()
+                        .rank(queueKey, String.valueOf(userId));
+
+                if (rank == null) {
+                        throw new RuntimeException(
+                                "대기열 순번 조회에 실패했습니다."
+                        );
+                }
+
+                if (rank == 0) {
+                        String availableKey =
+                                QueueRedisKey.availableKey(
+                                        eventProductId,
+                                        userId
+                                );
+
+                        redisTemplate.opsForValue().set(
+                                availableKey,
+                                "true",
+                                AVAILABLE_TTL_MINUTES,
+                                TimeUnit.MINUTES
+                        );
+
+                        redisTemplate.opsForZSet().remove(
+                                queueKey,
+                                String.valueOf(userId)
+                        );
+
+                        redisTemplate.opsForValue().increment(
+                                QueueRedisKey.enteredCountKey(eventProductId)
+                        );
+
+                        publishQueueRealtime(
+                                eventProductId,
+                                "ENTER",
+                                "첫 번째 사용자가 바로 입장했습니다."
+                        );
+
+                        return new QueueEnterResponse(
+                                eventProductId,
+                                userId,
+                                0L,
+                                "AVAILABLE"
+                        );
+                }
+
+                publishQueueRealtime(
+                        eventProductId,
+                        "ENTER",
+                        "대기열 인원이 변경되었습니다."
+                );
+
+                return new QueueEnterResponse(
+                        eventProductId,
+                        userId,
+                        rank + 1,
+                        "WAITING"
+                );
         }
 
-        Long rank = redisTemplate.opsForZSet()
-                .rank(queueKey, String.valueOf(userId));
 
-        if (rank == null) {
-            throw new RuntimeException(
-                    "대기열 순번 조회에 실패했습니다."
-            );
+        public long testEnterMultiple(
+                Long eventProductId,
+                Long startUserId,
+                int count
+        ) {
+                validateQueueAvailable(eventProductId);
+                validateQueueIsOpen(eventProductId);
+
+                if (startUserId == null || startUserId <= 0) {
+                throw new IllegalArgumentException(
+                        "시작 사용자 ID는 1 이상이어야 합니다."
+                );
+                }
+
+                if (count <= 0) {
+                throw new IllegalArgumentException(
+                        "추가할 사용자 수는 1명 이상이어야 합니다."
+                );
+                }
+
+                if (count > 1000) {
+                throw new IllegalArgumentException(
+                        "테스트 사용자는 한 번에 최대 1000명까지 추가할 수 있습니다."
+                );
+                }
+
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
+
+                long baseScore = System.currentTimeMillis();
+                long addedCount = 0L;
+
+                for (int i = 0; i < count; i++) {
+                long testUserId = startUserId + i;
+
+                Boolean added = redisTemplate.opsForZSet().add(
+                        queueKey,
+                        String.valueOf(testUserId),
+                        baseScore + i
+                );
+
+                if (Boolean.TRUE.equals(added)) {
+                        addedCount++;
+                }
+                }
+
+                publishQueueRealtime(
+                        eventProductId,
+                        "ENTER",
+                        "테스트 사용자 "
+                                + addedCount
+                                + "명이 대기열에 추가되었습니다."
+                );
+
+                return addedCount;
         }
 
+        public QueueRankResponse getRank(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateEventProductExists(eventProductId);
 
-        if (rank == 0) {
+                if (isAvailable(eventProductId, userId)) {
+                return new QueueRankResponse(0L);
+                }
+
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
+
+                Long rank = redisTemplate.opsForZSet()
+                        .rank(queueKey, String.valueOf(userId));
+
+                if (rank == null) {
+                return new QueueRankResponse(-1L);
+                }
+
+                return new QueueRankResponse(rank + 1);
+        }
+
+        public QueueStatusResponse getStatus(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateEventProductExists(eventProductId);
+
+                if (isAvailable(eventProductId, userId)) {
+                return new QueueStatusResponse("AVAILABLE");
+                }
+
+                Long rank = getRank(
+                        eventProductId,
+                        userId
+                ).getRank();
+
+                if (rank == -1L) {
+                return new QueueStatusResponse("NOT_ENTERED");
+                }
+
+                return new QueueStatusResponse("WAITING");
+        }
+
+        public QueueAvailableResponse getAvailable(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateEventProductExists(eventProductId);
+
+                return new QueueAvailableResponse(
+                        isAvailable(eventProductId, userId)
+                );
+        }
+
+        public QueueEstimatedTimeResponse getEstimatedTime(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateEventProductExists(eventProductId);
+
+                if (isAvailable(eventProductId, userId)) {
+                return new QueueEstimatedTimeResponse(0L);
+                }
+
+                Long rank = getRank(
+                        eventProductId,
+                        userId
+                ).getRank();
+
+                if (rank == -1L) {
+                return new QueueEstimatedTimeResponse(-1L);
+                }
+
+                long averageProcessSeconds = 3L;
+
+                return new QueueEstimatedTimeResponse(
+                        rank * averageProcessSeconds
+                );
+        }
+
+        public QueueCurrentUsersResponse getCurrentUsers(
+                Long eventProductId
+        ) {
+                validateEventProductExists(eventProductId);
+
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
+
+                Long size = redisTemplate.opsForZSet()
+                        .size(queueKey);
+
+                return new QueueCurrentUsersResponse(
+                        size == null ? 0L : size
+                );
+        }
+
+        public void expire(Long eventProductId) {
+                validateQueueAvailable(eventProductId);
+
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
+
+                Set<String> users = redisTemplate.opsForZSet()
+                        .range(
+                                queueKey,
+                                0,
+                                ALLOW_COUNT - 1
+                        );
+
+                if (users == null || users.isEmpty()) {
+                return;
+                }
+
+                for (String userIdValue : users) {
+                Long userId = Long.valueOf(userIdValue);
+
                 String availableKey =
                         QueueRedisKey.availableKey(
                                 eventProductId,
@@ -77,368 +311,147 @@ public class QueueService {
                         AVAILABLE_TTL_MINUTES,
                         TimeUnit.MINUTES
                 );
-
-                redisTemplate.opsForZSet().remove(
-                        queueKey,
-                        String.valueOf(userId)
-                );
+                }
 
                 redisTemplate.opsForValue().increment(
-                        QueueRedisKey.enteredCountKey(eventProductId)
+                        QueueRedisKey.enteredCountKey(eventProductId),
+                        users.size()
                 );
 
-                publishQueueRealtime(
-                        eventProductId,
-                        "ENTER",
-                        "첫 번째 사용자가 바로 입장했습니다."
-                );
-
-                return new QueueEnterResponse(
-                        eventProductId,
-                        userId,
-                        0L,
-                        "AVAILABLE"
-                );
-}
-
-        publishQueueRealtime(
-                eventProductId,
-                "ENTER",
-                "대기열 인원이 변경되었습니다."
-        );
-
-        return new QueueEnterResponse(
-                eventProductId,
-                userId,
-                rank + 1,
-                "WAITING"
-        );
-    }
-
-
-    public long testEnterMultiple(
-            Long eventProductId,
-            Long startUserId,
-            int count
-    ) {
-        validateQueueAvailable(eventProductId);
-        validateQueueIsOpen(eventProductId);
-
-        if (startUserId == null || startUserId <= 0) {
-            throw new IllegalArgumentException(
-                    "시작 사용자 ID는 1 이상이어야 합니다."
-            );
-        }
-
-        if (count <= 0) {
-            throw new IllegalArgumentException(
-                    "추가할 사용자 수는 1명 이상이어야 합니다."
-            );
-        }
-
-        if (count > 1000) {
-            throw new IllegalArgumentException(
-                    "테스트 사용자는 한 번에 최대 1000명까지 추가할 수 있습니다."
-            );
-        }
-
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
-
-        long baseScore = System.currentTimeMillis();
-        long addedCount = 0L;
-
-        for (int i = 0; i < count; i++) {
-            long testUserId = startUserId + i;
-
-            Boolean added = redisTemplate.opsForZSet().add(
-                    queueKey,
-                    String.valueOf(testUserId),
-                    baseScore + i
-            );
-
-            if (Boolean.TRUE.equals(added)) {
-                addedCount++;
-            }
-        }
-
-        publishQueueRealtime(
-                eventProductId,
-                "ENTER",
-                "테스트 사용자 "
-                        + addedCount
-                        + "명이 대기열에 추가되었습니다."
-        );
-
-        return addedCount;
-    }
-
-    public QueueRankResponse getRank(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateEventProductExists(eventProductId);
-
-        if (isAvailable(eventProductId, userId)) {
-            return new QueueRankResponse(0L);
-        }
-
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
-
-        Long rank = redisTemplate.opsForZSet()
-                .rank(queueKey, String.valueOf(userId));
-
-        if (rank == null) {
-            return new QueueRankResponse(-1L);
-        }
-
-        return new QueueRankResponse(rank + 1);
-    }
-
-    public QueueStatusResponse getStatus(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateEventProductExists(eventProductId);
-
-        if (isAvailable(eventProductId, userId)) {
-            return new QueueStatusResponse("AVAILABLE");
-        }
-
-        Long rank = getRank(
-                eventProductId,
-                userId
-        ).getRank();
-
-        if (rank == -1L) {
-            return new QueueStatusResponse("NOT_ENTERED");
-        }
-
-        return new QueueStatusResponse("WAITING");
-    }
-
-    public QueueAvailableResponse getAvailable(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateEventProductExists(eventProductId);
-
-        return new QueueAvailableResponse(
-                isAvailable(eventProductId, userId)
-        );
-    }
-
-    public QueueEstimatedTimeResponse getEstimatedTime(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateEventProductExists(eventProductId);
-
-        if (isAvailable(eventProductId, userId)) {
-            return new QueueEstimatedTimeResponse(0L);
-        }
-
-        Long rank = getRank(
-                eventProductId,
-                userId
-        ).getRank();
-
-        if (rank == -1L) {
-            return new QueueEstimatedTimeResponse(-1L);
-        }
-
-        long averageProcessSeconds = 3L;
-
-        return new QueueEstimatedTimeResponse(
-                rank * averageProcessSeconds
-        );
-    }
-
-    public QueueCurrentUsersResponse getCurrentUsers(
-            Long eventProductId
-    ) {
-        validateEventProductExists(eventProductId);
-
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
-
-        Long size = redisTemplate.opsForZSet()
-                .size(queueKey);
-
-        return new QueueCurrentUsersResponse(
-                size == null ? 0L : size
-        );
-    }
-
-    public void expire(Long eventProductId) {
-        validateQueueAvailable(eventProductId);
-
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
-
-        Set<String> users = redisTemplate.opsForZSet()
-                .range(
+                redisTemplate.opsForZSet().removeRange(
                         queueKey,
                         0,
                         ALLOW_COUNT - 1
                 );
 
-        if (users == null || users.isEmpty()) {
-            return;
-        }
-
-        for (String userIdValue : users) {
-            Long userId = Long.valueOf(userIdValue);
-
-            String availableKey =
-                    QueueRedisKey.availableKey(
-                            eventProductId,
-                            userId
-                    );
-
-            redisTemplate.opsForValue().set(
-                    availableKey,
-                    "true",
-                    AVAILABLE_TTL_MINUTES,
-                    TimeUnit.MINUTES
-            );
-        }
-
-        redisTemplate.opsForZSet().removeRange(
-                queueKey,
-                0,
-                ALLOW_COUNT - 1
-        );
-
-        publishQueueRealtime(
-                eventProductId,
-                "EXPIRE",
-                "앞 순번 사용자가 구매 가능 상태로 변경되었습니다."
-        );
-    }
-
-    public void validatePurchaseAccess(
-            Long eventProductId,
-            Long userId
-    ) {
-        validateQueueAvailable(eventProductId);
-
-        if (!isAvailable(eventProductId, userId)) {
-            throw new RuntimeException(
-                    "아직 구매 가능한 순번이 아닙니다."
-            );
-        }
-    }
-
-    public void complete(
-            Long eventProductId,
-            Long userId
-    ) {
-        String availableKey =
-                QueueRedisKey.availableKey(
+                publishQueueRealtime(
                         eventProductId,
-                        userId
+                        "EXPIRE",
+                        "앞 순번 사용자가 구매 가능 상태로 변경되었습니다."
+                );
+        }
+
+        public void validatePurchaseAccess(
+                Long eventProductId,
+                Long userId
+        ) {
+                validateQueueAvailable(eventProductId);
+
+                if (!isAvailable(eventProductId, userId)) {
+                throw new RuntimeException(
+                        "아직 구매 가능한 순번이 아닙니다."
+                );
+                }
+        }
+
+        public void complete(
+                Long eventProductId,
+                Long userId
+        ) {
+                String availableKey =
+                        QueueRedisKey.availableKey(
+                                eventProductId,
+                                userId
+                        );
+
+                redisTemplate.delete(availableKey);
+
+                publishQueueRealtime(
+                        eventProductId,
+                        "COMPLETE",
+                        "구매 가능 사용자의 처리가 완료되었습니다."
+                );
+        }
+
+        private void publishQueueRealtime(
+                Long eventProductId,
+                String type,
+                String message
+        ) {
+                String queueKey =
+                        QueueRedisKey.waitingQueueKey(eventProductId);
+
+                Long currentUsers = redisTemplate.opsForZSet()
+                        .size(queueKey);
+
+                QueueRealtimeResponse response =
+                        new QueueRealtimeResponse(
+                                eventProductId,
+                                currentUsers == null ? 0L : currentUsers,
+                                type,
+                                message
+                        );
+
+                messagingTemplate.convertAndSend(
+                        "/topic/queue/" + eventProductId,
+                        response
+                );
+        }
+
+        private boolean isAvailable(
+                Long eventProductId,
+                Long userId
+        ) {
+                String availableKey =
+                        QueueRedisKey.availableKey(
+                                eventProductId,
+                                userId
+                        );
+
+                return Boolean.TRUE.equals(
+                        redisTemplate.hasKey(availableKey)
+                );
+        }
+
+        private void validateEventProductExists(
+                Long eventProductId
+        ) {
+                EventProductValidationResponse response =
+                        commerceEventProductClient
+                                .validateEventProduct(eventProductId);
+
+                if (response == null || !response.exists()) {
+                throw new RuntimeException(
+                        "존재하지 않는 이벤트 상품입니다."
+                );
+                }
+        }
+
+        private void validateQueueAvailable(
+                Long eventProductId
+        ) {
+                EventProductValidationResponse response =
+                        commerceEventProductClient
+                                .validateEventProduct(eventProductId);
+
+                if (response == null || !response.exists()) {
+                throw new RuntimeException(
+                        "존재하지 않는 이벤트 상품입니다."
+                );
+                }
+
+                if (!response.queueAvailable()) {
+                throw new RuntimeException(
+                        "현재 대기열에 진입할 수 없는 이벤트 상품입니다. "
+                                + "eventStatus="
+                                + response.eventStatus()
+                                + ", eventProductStatus="
+                                + response.eventProductStatus()
+                );
+                }
+        }
+
+        private void validateQueueIsOpen(
+                Long eventProductId
+        ) {
+                String status = redisTemplate.opsForValue().get(
+                        QueueRedisKey.statusKey(eventProductId)
                 );
 
-        redisTemplate.delete(availableKey);
-
-        publishQueueRealtime(
-                eventProductId,
-                "COMPLETE",
-                "구매 가능 사용자의 처리가 완료되었습니다."
-        );
-    }
-
-    private void publishQueueRealtime(
-            Long eventProductId,
-            String type,
-            String message
-    ) {
-        String queueKey =
-                QueueRedisKey.waitingQueueKey(eventProductId);
-
-        Long currentUsers = redisTemplate.opsForZSet()
-                .size(queueKey);
-
-        QueueRealtimeResponse response =
-                new QueueRealtimeResponse(
-                        eventProductId,
-                        currentUsers == null ? 0L : currentUsers,
-                        type,
-                        message
+                if ("CLOSED".equals(status)) {
+                throw new RuntimeException(
+                        "관리자가 대기열을 종료했습니다."
                 );
-
-        messagingTemplate.convertAndSend(
-                "/topic/queue/" + eventProductId,
-                response
-        );
-    }
-
-    private boolean isAvailable(
-            Long eventProductId,
-            Long userId
-    ) {
-        String availableKey =
-                QueueRedisKey.availableKey(
-                        eventProductId,
-                        userId
-                );
-
-        return Boolean.TRUE.equals(
-                redisTemplate.hasKey(availableKey)
-        );
-    }
-
-    private void validateEventProductExists(
-            Long eventProductId
-    ) {
-        EventProductValidationResponse response =
-                commerceEventProductClient
-                        .validateEventProduct(eventProductId);
-
-        if (response == null || !response.exists()) {
-            throw new RuntimeException(
-                    "존재하지 않는 이벤트 상품입니다."
-            );
+                }
         }
-    }
-
-    private void validateQueueAvailable(
-            Long eventProductId
-    ) {
-        EventProductValidationResponse response =
-                commerceEventProductClient
-                        .validateEventProduct(eventProductId);
-
-        if (response == null || !response.exists()) {
-            throw new RuntimeException(
-                    "존재하지 않는 이벤트 상품입니다."
-            );
         }
-
-        if (!response.queueAvailable()) {
-            throw new RuntimeException(
-                    "현재 대기열에 진입할 수 없는 이벤트 상품입니다. "
-                            + "eventStatus="
-                            + response.eventStatus()
-                            + ", eventProductStatus="
-                            + response.eventProductStatus()
-            );
-        }
-    }
-
-    private void validateQueueIsOpen(
-            Long eventProductId
-    ) {
-        String status = redisTemplate.opsForValue().get(
-                QueueRedisKey.statusKey(eventProductId)
-        );
-
-        if ("CLOSED".equals(status)) {
-            throw new RuntimeException(
-                    "관리자가 대기열을 종료했습니다."
-            );
-        }
-    }
-}
