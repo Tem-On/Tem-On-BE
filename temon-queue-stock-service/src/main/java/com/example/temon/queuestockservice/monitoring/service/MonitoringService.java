@@ -92,7 +92,7 @@ public class MonitoringService {
         ));
 
         metrics.add(new SystemMetricResponse(
-                "JVM 메모리",
+                "메모리 사용량",
                 formatDecimal(memoryUsage),
                 "%",
                 resolveUsageStatus(memoryUsage)
