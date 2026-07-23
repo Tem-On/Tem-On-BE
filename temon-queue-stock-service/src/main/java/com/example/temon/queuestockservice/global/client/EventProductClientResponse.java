@@ -18,6 +18,7 @@ public record EventProductClientResponse(
         LocalDateTime createdAt,
         Integer totalStock,
         Integer remainingStock,
+        Integer reservedStock,
         Integer soldCount
 ) {
 }

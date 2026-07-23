@@ -1,4 +1,5 @@
 package com.example.temon.queuestockservice.queue.redis;
+
 public class QueueRedisKey {
 
     private QueueRedisKey() {
@@ -23,5 +24,9 @@ public class QueueRedisKey {
 
     public static String statusKey(Long eventProductId) {
         return "queue:status:event-product:" + eventProductId;
+    }
+
+    public static String enteredCountKey(Long eventProductId) {
+        return "queue:entered-count:event-product:" + eventProductId;
     }
 }

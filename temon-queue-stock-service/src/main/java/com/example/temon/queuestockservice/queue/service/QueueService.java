@@ -65,37 +65,41 @@ public class QueueService {
 
 
         if (rank == 0) {
-            String availableKey =
-                    QueueRedisKey.availableKey(
-                            eventProductId,
-                            userId
-                    );
+                String availableKey =
+                        QueueRedisKey.availableKey(
+                                eventProductId,
+                                userId
+                        );
 
-            redisTemplate.opsForValue().set(
-                    availableKey,
-                    "true",
-                    AVAILABLE_TTL_MINUTES,
-                    TimeUnit.MINUTES
-            );
+                redisTemplate.opsForValue().set(
+                        availableKey,
+                        "true",
+                        AVAILABLE_TTL_MINUTES,
+                        TimeUnit.MINUTES
+                );
 
-            redisTemplate.opsForZSet().remove(
-                    queueKey,
-                    String.valueOf(userId)
-            );
+                redisTemplate.opsForZSet().remove(
+                        queueKey,
+                        String.valueOf(userId)
+                );
 
-            publishQueueRealtime(
-                    eventProductId,
-                    "ENTER",
-                    "첫 번째 사용자가 바로 입장했습니다."
-            );
+                redisTemplate.opsForValue().increment(
+                        QueueRedisKey.enteredCountKey(eventProductId)
+                );
 
-            return new QueueEnterResponse(
-                    eventProductId,
-                    userId,
-                    0L,
-                    "AVAILABLE"
-            );
-        }
+                publishQueueRealtime(
+                        eventProductId,
+                        "ENTER",
+                        "첫 번째 사용자가 바로 입장했습니다."
+                );
+
+                return new QueueEnterResponse(
+                        eventProductId,
+                        userId,
+                        0L,
+                        "AVAILABLE"
+                );
+}
 
         publishQueueRealtime(
                 eventProductId,
