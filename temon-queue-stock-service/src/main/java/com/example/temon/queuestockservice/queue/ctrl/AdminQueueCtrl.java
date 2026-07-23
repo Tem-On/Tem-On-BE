@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Admin Queue", description = "관리자 대기열 관리 api")
+import java.util.List;
+
+@Tag(name = "Admin Queue", description = "관리자 대기열 관리 API")
 @RestController
 @RequestMapping("/api/admin/queue")
 @RequiredArgsConstructor
@@ -17,6 +19,14 @@ import org.springframework.web.bind.annotation.*;
 public class AdminQueueCtrl {
 
     private final AdminQueueService adminQueueService;
+
+    @Operation(summary = "전체 이벤트 상품 대기열 조회")
+    @GetMapping
+    public ResponseEntity<List<AdminQueueResponse>> getQueues() {
+        return ResponseEntity.ok(
+                adminQueueService.getQueues()
+        );
+    }
 
     @Operation(summary = "이벤트 상품 대기열 조회")
     @GetMapping("/{eventProductId}")
@@ -54,6 +64,7 @@ public class AdminQueueCtrl {
             @PathVariable Long eventProductId
     ) {
         adminQueueService.clearQueue(eventProductId);
+
         return ResponseEntity.noContent().build();
     }
 }

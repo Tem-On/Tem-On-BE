@@ -8,6 +8,12 @@ import lombok.Getter;
 public class AdminQueueResponse {
 
     private Long eventProductId;
-    private String status;
-    private Long waitingUsers;
+    private Long eventId;
+
+    private String eventTitle;
+    private String productName;
+
+    private String gateStatus;
+    private Long waitingCount;
+    private Long enteredCount;
 }
