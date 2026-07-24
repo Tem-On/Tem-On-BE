@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
+                                "/actuator/**",
                                 // 아래는 테스트용으로 열어둔것들
                                 "/ws/**",
                                 "/ws-test.html",
