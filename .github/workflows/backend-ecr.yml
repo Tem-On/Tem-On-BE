@@ -1,4 +1,4 @@
-name: Build and Push Backend Images to ECR
+name: Build, Push and Deploy Backend Images
 
 on:
   push:
@@ -11,6 +11,8 @@ permissions:
 
 env:
   AWS_REGION: ap-northeast-2
+  EKS_CLUSTER_NAME: temon-dev-eks
+  K8S_NAMESPACE: temon
 
 jobs:
   build-and-push:
@@ -22,18 +24,28 @@ jobs:
         include:
           - service: temon-auth-service
             repository: temon-auth
+            deployment: auth
+            container: auth
 
           - service: temon-commerce-service
             repository: temon-commerce
+            deployment: commerce
+            container: commerce
 
           - service: temon-gateway
             repository: temon-gateway
+            deployment: gateway
+            container: gateway
 
           - service: temon-order-payment-service
             repository: temon-order-payment
+            deployment: order-payment
+            container: order-payment
 
           - service: temon-queue-stock-service
             repository: temon-queue-stock
+            deployment: queue-stock
+            container: queue-stock
 
     steps:
       - name: Checkout repository
@@ -52,6 +64,7 @@ jobs:
 
       - name: Set image tag
         id: image-tag
+        shell: bash
         run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
@@ -72,3 +85,27 @@ jobs:
         run: |
           docker push $ECR_REGISTRY/${{ matrix.repository }}:$IMAGE_TAG
           docker push $ECR_REGISTRY/${{ matrix.repository }}:latest
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.image-tag.outputs.tag }}
+        run: |
+          kubectl set image \
+            deployment/${{ matrix.deployment }} \
+            ${{ matrix.container }}=$ECR_REGISTRY/${{ matrix.repository }}:$IMAGE_TAG \
+            -n ${{ env.K8S_NAMESPACE }}
+
+          kubectl rollout status \
+            deployment/${{ matrix.deployment }} \
+            -n ${{ env.K8S_NAMESPACE }} \
+            --timeout=300s
