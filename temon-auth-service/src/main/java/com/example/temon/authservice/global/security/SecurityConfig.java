@@ -41,6 +41,7 @@ public class SecurityConfig {
                         // 인증 없이 접근 가능한 공개 API
                         .requestMatchers(
                                 "/api/auth/oauth/**",
+                                "/error",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
