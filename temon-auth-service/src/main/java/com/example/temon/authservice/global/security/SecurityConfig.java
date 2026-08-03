@@ -1,9 +1,7 @@
 package com.example.temon.authservice.global.security;
 
 import com.example.temon.authservice.auth.jwt.JwtAuthenticationFilter;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -36,14 +34,19 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // 브라우저 CORS 사전 요청 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+
+                        // 인증 없이 접근 가능한 공개 API
                         .requestMatchers(
-                                "/api/auth/oauth/kakao",
+                                "/api/auth/oauth/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/actuator/**",
-                                // 아래는 테스트용으로 열어둔것들
+
+                                // 테스트용 공개 경로
                                 "/ws/**",
                                 "/ws-test.html",
                                 "/queue-ws-test.html",
@@ -51,11 +54,14 @@ public class SecurityConfig {
                                 "/event-ws-test.html",
                                 "/monitoring-ws-test.html",
                                 "/admin-order-test.html"
-                        ).permitAll()
+                        )
+                        .permitAll()
 
+                        // 관리자 API
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
+                        // 나머지 API는 JWT 인증 필요
                         .anyRequest()
                         .authenticated()
                 )
