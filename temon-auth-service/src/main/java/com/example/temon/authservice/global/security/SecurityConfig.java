@@ -34,20 +34,16 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        // 브라우저 CORS 사전 요청 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
 
-                        // 인증 없이 접근 가능한 공개 API
                         .requestMatchers(
-                                "/api/auth/oauth/**",
+                                "/api/auth/**",
                                 "/error",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/actuator/**",
-
-                                // 테스트용 공개 경로
                                 "/ws/**",
                                 "/ws-test.html",
                                 "/queue-ws-test.html",
@@ -58,11 +54,9 @@ public class SecurityConfig {
                         )
                         .permitAll()
 
-                        // 관리자 API
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")
 
-                        // 나머지 API는 JWT 인증 필요
                         .anyRequest()
                         .authenticated()
                 )
