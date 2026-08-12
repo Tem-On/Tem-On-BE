@@ -37,6 +37,11 @@ TEM-ON은 선착순 이벤트 및 타임세일 상황에서 다수의 사용자�
 
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=flat-square&logo=apachekafka&logoColor=white)
 
+### Real-time Communication
+
+![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=flat-square&logo=socketdotio&logoColor=white)
+![STOMP](https://img.shields.io/badge/STOMP-4A90E2?style=flat-square)
+
 ### Security
 
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)
@@ -353,6 +358,29 @@ stock-changed
 event-status
 ```
 
+---
+
+# ⚡ WebSocket 기반 실시간 통신
+
+## 왜 WebSocket을 사용했는가?
+
+대기열 순위와 관리자 주문/대시보드처럼 상태가 지속적으로 변경되는 데이터를  
+클라이언트가 매번 HTTP Polling으로 조회하면 불필요한 요청이 반복될 수 있다고 판단했습니다.
+
+따라서 서버에서 상태 변경을 클라이언트에 실시간으로 전달할 수 있도록  
+**WebSocket + STOMP 기반의 실시간 통신을 적용했습니다.**
+
+```text
+상태 변경
+    ↓
+Backend
+    ↓
+WebSocket / STOMP
+    ↓
+Client
+    ↓
+화면 실시간 갱신
+```
 ---
 
 # 🌐 API Gateway
@@ -802,6 +830,7 @@ GET    /api/admin/stocks
 |---|---|---|
 | 이벤트 순간 요청 집중 | **Redis 대기열** | 요청이 주문/DB까지 한 번에 전달되는 것을 제어하기 위해 |
 | 대기 순서 및 Rank 관리 | **Redis Sorted Set** | 진입 순서를 유지하면서 빠르게 사용자 순위를 조회하기 위해 |
+| 실시간 상태 전달 | **WebSocket / STOMP** | 반복적인 HTTP Polling 대신 서버에서 상태 변경을 실시간으로 전달하기 위해 |
 | 서비스 간 후속 처리 | **Kafka** | 동기 호출 의존도를 낮추고 후속 작업을 비동기로 분리하기 위해 |
 | 서비스 책임 분리 | **MSA** | 도메인별 책임과 트래픽 특성을 분리하기 위해 |
 | 외부 요청 관리 | **API Gateway** | MSA의 단일 진입점과 인증 처리를 통합하기 위해 |
