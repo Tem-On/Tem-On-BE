@@ -42,6 +42,11 @@ TEM-ON은 선착순 이벤트 및 타임세일 상황에서 다수의 사용자�
 ![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
 
+### CI/CD
+
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+
 ### Monitoring & Test
 
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white)
@@ -139,7 +144,7 @@ tem-on
 
 ---
 
-# 1. Architecture
+# 🏗️ Architecture
 
 <img width="1661" height="948" alt="image" src="https://github.com/user-attachments/assets/fb20f20c-79b7-4cae-a4e9-3fd3bf496877" />
 
@@ -169,7 +174,7 @@ TEM-ON의 기능을 분석했을 때 각 영역마다 책임과 트래픽 특성
 
 ---
 
-# 2. Redis 기반 대기열
+# 🚦 Redis 기반 대기열
 
 ## 왜 대기열이 필요했는가?
 
@@ -261,7 +266,7 @@ Score에 진입 시간을 저장하면 사용자 진입 순서를 자연스럽�
 
 ---
 
-# 3. Queue Flow
+# 🎟️ Queue Flow
 
 ```text
 이벤트 상품 접근
@@ -302,7 +307,7 @@ RESET
 
 ---
 
-# 4. Kafka 기반 비동기 이벤트 처리
+# 📨 Kafka 기반 비동기 이벤트 처리
 
 ## 왜 Kafka를 사용했는가?
 
@@ -350,7 +355,7 @@ event-status
 
 ---
 
-# 5. API Gateway
+# 🌐 API Gateway
 
 ## 왜 Gateway를 두었는가?
 
@@ -380,7 +385,32 @@ JWT 검증 역시 Gateway에서 수행하고 인증된 사용자 정보를 내�
 
 ---
 
-# 6. Monitoring
+# 🔄 CI/CD
+
+## 왜 GitHub Actions를 사용했는가?
+
+MSA 구조에서는 서비스별로 Build, Docker Image 생성, ECR Push 과정을 반복해야 합니다.
+
+이 과정을 수동으로 수행할 경우 반복 작업과 배포 실수가 발생할 수 있기 때문에  
+**GitHub Actions를 활용하여 서비스별 빌드 및 이미지 배포 과정을 자동화했습니다.**
+
+```text
+GitHub Push
+     ↓
+GitHub Actions
+     ↓
+Build
+     ↓
+Docker Image Build
+     ↓
+Amazon ECR Push
+```
+
+이를 통해 각 Microservice의 배포 준비 과정을 일관된 방식으로 자동화했습니다.
+
+---
+
+# 📊 Monitoring
 
 ## 왜 모니터링을 구성했는가?
 
@@ -453,7 +483,7 @@ temon_stock_sold
 
 ---
 
-# 7. Performance Test
+# 🧪 Performance Test
 
 ## 왜 부하 테스트를 진행했는가?
 
@@ -471,7 +501,7 @@ temon_stock_sold
 
 ---
 
-# 8. Troubleshooting
+# 🔧 Troubleshooting
 ## DB Connection Pool 병목 분석 및 개선
 
 ### 1. 문제 발견
@@ -708,7 +738,7 @@ Response Time -30%
 ---
 
 
-# 9. 주요 API
+# 🔌 주요 API
 
 ### Authentication
 
@@ -766,7 +796,7 @@ GET    /api/admin/stocks
 
 ---
 
-# 10. 핵심 기술 선택 요약
+# 💡 핵심 기술 선택 요약
 
 | 문제 | 선택 | 선택한 이유 |
 |---|---|---|
@@ -782,7 +812,7 @@ GET    /api/admin/stocks
 
 ---
 
-# 11. What I Focused On
+# 🎯 What I Focused On
 
 TEM-ON을 개발하면서 특정 기술을 사용하는 것 자체보다 **왜 이 기술과 구조가 필요한지를 먼저 고민하는 것**에 집중했습니다.
 
