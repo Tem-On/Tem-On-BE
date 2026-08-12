@@ -58,7 +58,8 @@ TEM-ON은 선착순 이벤트 및 타임세일 상황에서 다수의 사용자�
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white)
 ![nGrinder](https://img.shields.io/badge/nGrinder-4B4B4B?style=flat-square)
 
-
+### External API
+![Kakao](https://img.shields.io/badge/Kakao%20API-FFCD00?style=for-the-badge)
 
 ---
 
