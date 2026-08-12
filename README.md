@@ -869,4 +869,14 @@ Connection Pool 병목 발견
 동일 조건 재검증
 ```
 
-프로젝트의 목표는 많은 기술을 사용하는 것이 아니라, **문제를 정의하고 필요한 기술을 선택한 뒤 실제 데이터를 통해 그 선택과 개선 결과를 검증하는 것**이었습니다.
+---
+
+<div align=center>
+	<h1>👨‍💻 BE Developers</h1>
+	
+| <img src="https://github.com/rudals2334.png" width="80"> | <img src="https://github.com/M4rs0312.png" width="80"> |
+| :--------------------------------------------------: | :--------------------------------------------------: |
+| [이경민](https://github.com/rudals2334) | [정회성](https://github.com/M4rs0312) |
+
+</div>
+
