@@ -1,0 +1,96 @@
+package com.example.temon.queuestockservice.stock.domain.entity;
+
+import java.time.LocalDateTime;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.CreatedDate;
+
+@Entity
+@Table(name = "stocks")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
+public class StockEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "event_product_id", nullable = false, unique = true)
+    private Long eventProductId;
+
+    @Column(nullable = false)
+    private int totalQuantity;
+
+    @Column(nullable = false)
+    private int remainingQuantity;
+
+    @Column(nullable = false)
+    private int reservedQuantity;
+
+    @Column(nullable = false)
+    private int soldQuantity;
+
+    @Version
+    private Long version;
+    
+    @CreatedDate
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    public void reserve(int quantity) {
+        if (this.remainingQuantity < quantity) {
+            throw new IllegalArgumentException("남은 재고가 부족합니다.");
+        }
+
+        this.remainingQuantity -= quantity;
+        this.reservedQuantity += quantity;
+    }
+
+    public void release(int quantity) {
+        if (this.reservedQuantity < quantity) {
+            throw new IllegalArgumentException("복구할 선점 재고가 부족합니다.");
+        }
+
+        this.reservedQuantity -= quantity;
+        this.remainingQuantity += quantity;
+    }
+
+    public void confirm(int quantity) {
+        if (this.reservedQuantity < quantity) {
+            throw new IllegalArgumentException("확정할 선점 재고가 부족합니다.");
+        }
+
+        this.reservedQuantity -= quantity;
+        this.soldQuantity += quantity;
+    }
+
+    public void cancelSold(int quantity) {
+        if (this.soldQuantity < quantity) {
+            throw new IllegalArgumentException("취소할 판매 재고가 부족합니다.");
+        }
+
+        this.soldQuantity -= quantity;
+        this.remainingQuantity += quantity;
+    }
+
+    public void updateQuantity(int newTotalQuantity) {
+        int activeQuantity = this.reservedQuantity + this.soldQuantity;
+        if (newTotalQuantity < activeQuantity) {
+            throw new IllegalArgumentException("새로운 전체 재고는 (선점 재고 + 판매 재고)보다 적을 수 없습니다. 최소 필요 수량: " + activeQuantity);
+        }
+
+        this.totalQuantity = newTotalQuantity;
+        this.remainingQuantity = newTotalQuantity - this.reservedQuantity - this.soldQuantity;
+    }
+
+    public void forceSoldOut() {
+        this.totalQuantity = this.reservedQuantity + this.soldQuantity;
+        this.remainingQuantity = 0;
+    }
+}
