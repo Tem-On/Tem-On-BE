@@ -52,6 +52,92 @@ TEM-ON은 선착순 이벤트 및 타임세일 상황에서 다수의 사용자�
 
 ---
 
+## 📁 Project Structure
+
+<details>
+<summary><b>백엔드 프로젝트 구조 보기</b></summary>
+
+<br>
+
+```text
+tem-on
+├── temon-gateway
+│   └── src/main/java/com/example/temon/gateway
+│       ├── global
+│       │   └── config
+│       └── jwt
+│
+├── temon-auth-service
+│   └── src/main/java/com/example/temon/authservice
+│       ├── auth
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── jwt
+│       │   ├── repository
+│       │   └── service
+│       ├── user
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── repository
+│       │   └── service
+│       └── global
+│
+├── temon-commerce-service
+│   └── src/main/java/com/example/temon/commerceservice
+│       ├── product
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── repository
+│       │   └── service
+│       ├── event
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── repository
+│       │   └── service
+│       └── global
+│
+├── temon-order-payment-service
+│   └── src/main/java/com/example/temon/orderpaymentservice
+│       ├── order
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── facade
+│       │   ├── repository
+│       │   └── service
+│       ├── payment
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── repository
+│       │   └── service
+│       ├── dashboard
+│       └── global
+│
+├── temon-queue-stock-service
+│   └── src/main/java/com/example/temon/queuestockservice
+│       ├── queue
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── redis
+│       │   └── service
+│       ├── stock
+│       │   ├── ctrl
+│       │   ├── domain
+│       │   ├── repository
+│       │   └── service
+│       └── global
+│
+├── temon-common
+│   └── src/main/java/com/example/temon/common
+│       └── dto
+│           └── event
+│
+└── legacy-monolith
+    └── 기존 모놀리식 애플리케이션
+
+```
+</details>
+
+---
 
 # 1. Architecture
 
